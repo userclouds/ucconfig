@@ -87,8 +87,19 @@ func Apply(ctx context.Context, idpClient *idp.Client, fqtn string, manifestPath
 	uclog.Infof(ctx, "Terraform files will be generated in %s", dname)
 	genTerraform(ctx, &mfest, fqtn, &resources, dname)
 
+	uclog.Infof(ctx, "Running terraform init...")
+	cmd := exec.Command("terraform", "init")
+	cmd.Dir = dname
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		uclog.Fatalf(ctx, "Failed to run terraform init: %v", err)
+	}
+
 	uclog.Infof(ctx, "Running terraform apply...")
-	cmd := exec.Command("terraform", "apply")
+	cmd = exec.Command("terraform", "apply")
 	cmd.Dir = dname
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
