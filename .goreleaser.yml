@@ -29,6 +29,7 @@ checksum:
 # Build Docker images:
 kos:
   - repository: userclouds/ucconfig
+    base_image: hashicorp/terraform
     tags:
       - '{{.Version}}'
       - latest
