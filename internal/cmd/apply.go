@@ -46,7 +46,7 @@ func genTerraform(ctx context.Context, mfest *manifest.Manifest, fqtn string, re
 }
 
 // Apply implements a "ucconfig apply" subcommand that applies a manifest.
-func Apply(ctx context.Context, idpClient *idp.Client, fqtn string, tenantURL string, clientID string, clientSecret string, manifestPath string) {
+func Apply(ctx context.Context, dryRun bool, idpClient *idp.Client, fqtn string, tenantURL string, clientID string, clientSecret string, manifestPath string) {
 	uclog.Infof(ctx, "Reading manifest from %s...", manifestPath)
 	manifestText, err := os.ReadFile(manifestPath)
 	if err != nil {
@@ -98,8 +98,12 @@ func Apply(ctx context.Context, idpClient *idp.Client, fqtn string, tenantURL st
 		uclog.Fatalf(ctx, "Failed to run terraform init: %v", err)
 	}
 
-	uclog.Infof(ctx, "Running terraform apply...")
-	cmd = exec.Command("terraform", "apply")
+	subcmdName := "apply"
+	if dryRun {
+		subcmdName = "plan"
+	}
+	uclog.Infof(ctx, "Running terraform %s...", subcmdName)
+	cmd = exec.Command("terraform", subcmdName)
 	cmd.Dir = dname
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
