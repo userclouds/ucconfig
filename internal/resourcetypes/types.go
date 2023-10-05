@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"userclouds.com/idp"
-	"userclouds.com/idp/userstore"
 	"userclouds.com/infra/ucerr"
 )
 
@@ -22,40 +21,6 @@ type ResourceType struct {
 	OmitAttributes []string
 }
 
-func getColumnRetentions(ctx context.Context, client *idp.Client, dt userstore.DataLifeCycleState) ([]interface{}, error) {
-	response, err := client.ListColumns(ctx)
-	if err != nil {
-		return nil, ucerr.Wrap(err)
-	}
-	out := []interface{}{}
-	for _, column := range response.Data {
-		retentionResponse, err := client.GetColumnRetentionDurationsForColumn(ctx, dt, column.ID)
-		if err != nil {
-			return nil, ucerr.Wrap(err)
-		}
-		for _, retention := range retentionResponse.RetentionDurations {
-			if retention.UseDefault {
-				// Skip default retentions inherited from elsewhere
-				continue
-			}
-			out = append(out, retention)
-		}
-	}
-	return out, nil
-}
-
-var omitRetentionAttributes = []string{
-	// The default is computed from tenant/purpose retention settings (i.e. subject to change, would
-	// create TF drift) and only used display in the console UI.
-	"default_duration",
-	// purpose_id and purpose_name should really be a ResourceID instead. In general, we try to
-	// exclude names to avoid creating drift if the referenced resources change
-	"purpose_name",
-	// This is like an etag, from VersionBaseModel. We can't include it in configuration or else we
-	// would have drift after applying every change
-	"version",
-}
-
 // ResourceTypes lists the resource types supported by ucconfig.
 var ResourceTypes = []ResourceType{
 	{
@@ -71,28 +36,6 @@ var ResourceTypes = []ResourceType{
 			}
 			return out, nil
 		},
-	},
-	{
-		TerraformTypeSuffix: "userstore_column_live_retention_duration",
-		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
-			return getColumnRetentions(ctx, client, userstore.DataLifeCycleStateLive)
-		},
-		References: map[string]string{
-			"column_id":  "userstore_column",
-			"purpose_id": "userstore_purpose",
-		},
-		OmitAttributes: omitRetentionAttributes,
-	},
-	{
-		TerraformTypeSuffix: "userstore_column_soft_deleted_retention_duration",
-		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
-			return getColumnRetentions(ctx, client, userstore.DataLifeCycleStateSoftDeleted)
-		},
-		References: map[string]string{
-			"column_id":  "userstore_column",
-			"purpose_id": "userstore_purpose",
-		},
-		OmitAttributes: omitRetentionAttributes,
 	},
 	{
 		TerraformTypeSuffix: "userstore_accessor",
