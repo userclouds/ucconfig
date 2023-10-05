@@ -1,79 +1,116 @@
 resources:
-    - terraformtypesuffix: userstore_column
-      manifestid: userstore_column_email_verified
-      resourceuuids:
+    - uc_terraform_type: userstore_column
+      manifest_id: userstore_column_email_verified
+      resource_uuids:
         __DEFAULT: 12b3f133-4ad1-4f11-9d7d-313eb7cb95fa
-        dev: 12b3f133-4ad1-4f11-9d7d-313eb7cb95fa
+        usercloudsdev-demotenant: 12b3f133-4ad1-4f11-9d7d-313eb7cb95fa
       attributes:
         index_type: none
         is_array: false
         name: email_verified
         type: boolean
-    - terraformtypesuffix: userstore_column
-      manifestid: userstore_column_email
-      resourceuuids:
+    - uc_terraform_type: userstore_column
+      manifest_id: userstore_column_email
+      resource_uuids:
         __DEFAULT: 2c7a7c9b-90e8-47e4-8f6e-ec73bd2dec16
-        dev: 2c7a7c9b-90e8-47e4-8f6e-ec73bd2dec16
+        usercloudsdev-demotenant: 2c7a7c9b-90e8-47e4-8f6e-ec73bd2dec16
       attributes:
         index_type: indexed
         is_array: false
         name: email
         type: string
-    - terraformtypesuffix: userstore_column
-      manifestid: userstore_column_external_alias
-      resourceuuids:
+    - uc_terraform_type: userstore_column
+      manifest_id: userstore_column_external_alias
+      resource_uuids:
         __DEFAULT: 2ee3d57d-9756-464e-a5e9-04244936cb9e
-        dev: 2ee3d57d-9756-464e-a5e9-04244936cb9e
+        usercloudsdev-demotenant: 2ee3d57d-9756-464e-a5e9-04244936cb9e
       attributes:
         index_type: unique
         is_array: false
         name: external_alias
         type: string
-    - terraformtypesuffix: userstore_column
-      manifestid: userstore_column_picture
-      resourceuuids:
+    - uc_terraform_type: userstore_column
+      manifest_id: userstore_column_picture
+      resource_uuids:
         __DEFAULT: 4d4d0757-3bc2-424d-9caf-a930edb49b69
-        dev: 4d4d0757-3bc2-424d-9caf-a930edb49b69
+        usercloudsdev-demotenant: 4d4d0757-3bc2-424d-9caf-a930edb49b69
       attributes:
         index_type: none
         is_array: false
         name: picture
         type: string
-    - terraformtypesuffix: userstore_column
-      manifestid: userstore_column_newcol
-      resourceuuids:
-        __DEFAULT: 551cf0ff-f6e7-4580-ad47-5da0316da84f
-        dev: 551cf0ff-f6e7-4580-ad47-5da0316da84f
-      attributes:
-        index_type: none
-        is_array: false
-        name: newcol
-        type: string
-    - terraformtypesuffix: userstore_column
-      manifestid: userstore_column_nickname
-      resourceuuids:
+    - uc_terraform_type: userstore_column
+      manifest_id: userstore_column_nickname
+      resource_uuids:
         __DEFAULT: 83cc42b0-da8c-4a61-9db1-da70f21bab60
-        dev: 83cc42b0-da8c-4a61-9db1-da70f21bab60
+        usercloudsdev-demotenant: 83cc42b0-da8c-4a61-9db1-da70f21bab60
       attributes:
         index_type: none
         is_array: false
         name: nickname
         type: string
-    - terraformtypesuffix: userstore_column
-      manifestid: userstore_column_name
-      resourceuuids:
+    - uc_terraform_type: userstore_column
+      manifest_id: userstore_column_name
+      resource_uuids:
         __DEFAULT: fe20fd48-a006-4ad8-9208-4aad540d8794
-        dev: fe20fd48-a006-4ad8-9208-4aad540d8794
+        usercloudsdev-demotenant: fe20fd48-a006-4ad8-9208-4aad540d8794
       attributes:
         index_type: indexed
         is_array: false
         name: name
         type: string
-    - terraformtypesuffix: transformer
-      manifestid: transformer_EmailToID
-      resourceuuids:
+    - uc_terraform_type: userstore_accessor
+      manifest_id: userstore_accessor_DemoAccessor
+      resource_uuids:
+        __DEFAULT: 6b4fb958-83d2-4271-81c5-4a832db3f4f1
+        usercloudsdev-demotenant: 6b4fb958-83d2-4271-81c5-4a832db3f4f1
+      attributes:
+        access_policy: '@UC_SYSTEM_OBJECT("access_policy", "AllowAll")'
+        columns:
+            - column: '@UC_MANIFEST_ID("userstore_column_email").id'
+              transformer: '@UC_SYSTEM_OBJECT("transformer", "PassthroughUnchangedData")'
+        data_life_cycle_state: live
+        description: Sample description
+        name: DemoAccessor
+        purposes:
+            - '@UC_SYSTEM_OBJECT("userstore_purpose", "operational")'
+        selector_config:
+            where_clause: '{id} = ANY(?)'
+    - uc_terraform_type: access_policy_template
+      manifest_id: access_policy_template_AllowAll
+      resource_uuids:
+        __DEFAULT: 1e742248-fdde-4c88-9ea7-2c2106ec7aa8
+        usercloudsdev-demotenant: 1e742248-fdde-4c88-9ea7-2c2106ec7aa8
+      attributes:
+        description: This template allows all access.
+        function: |-
+            function policy(context, params) {
+            		return true;
+            	}
+        name: AllowAll
+    - uc_terraform_type: access_policy_template
+      manifest_id: access_policy_template_CheckAttribute
+      resource_uuids:
+        __DEFAULT: aad2bf25-311f-467e-9169-a6a89b6d34a6
+        usercloudsdev-demotenant: aad2bf25-311f-467e-9169-a6a89b6d34a6
+      attributes:
+        description: This template returns the value of checkAttribute on the given parameters.
+        function: |-
+            function policy(context, params) {
+            		const id1 = params.userIDUsage === "id1" ? context.user.id : params.id1;
+            		const id2 = params.userIDUsage === "id2" ? context.user.id : params.id2;
+            		const attribute = params.attribute;
+            		if (!id1 || !id2 || !attribute) {
+            			return false;
+            		}
+            		return checkAttribute(id1, id2, attribute);
+            	}
+        name: CheckAttribute
+    - uc_terraform_type: transformer
+      manifest_id: transformer_EmailToID
+      resource_uuids:
         __DEFAULT: 0cedf7a4-86ab-450a-9426-478ad0a60faa
-        dev: 0cedf7a4-86ab-450a-9426-478ad0a60faa
+        usercloudsdev-demotenant: 0cedf7a4-86ab-450a-9426-478ad0a60faa
       attributes:
         description: This policy generates an email token for the given email.
         function: |-
@@ -142,11 +179,11 @@ resources:
             	"PreserveValue": true
             }]
         transform_type: tokenizebyvalue
-    - terraformtypesuffix: transformer
-      manifestid: transformer_SSNToID
-      resourceuuids:
+    - uc_terraform_type: transformer
+      manifest_id: transformer_SSNToID
+      resource_uuids:
         __DEFAULT: 3f65ee22-2241-4694-bbe3-72cefbe59ff2
-        dev: 3f65ee22-2241-4694-bbe3-72cefbe59ff2
+        usercloudsdev-demotenant: 3f65ee22-2241-4694-bbe3-72cefbe59ff2
       attributes:
         description: This policy generates a masked SSN.
         function: |-
@@ -234,11 +271,11 @@ resources:
             	"PreserveCharsStart": 3
             }
         transform_type: transform
-    - terraformtypesuffix: transformer
-      manifestid: transformer_CreditCardToID
-      resourceuuids:
+    - uc_terraform_type: transformer
+      manifest_id: transformer_CreditCardToID
+      resource_uuids:
         __DEFAULT: 618a4ae7-9979-4ee8-bac5-db87335fe4d9
-        dev: 618a4ae7-9979-4ee8-bac5-db87335fe4d9
+        usercloudsdev-demotenant: 618a4ae7-9979-4ee8-bac5-db87335fe4d9
       attributes:
         description: This policy generates a masked credit card number.
         function: |4-
@@ -337,11 +374,11 @@ resources:
             	"PreserveCharsStart": 0
             }
         transform_type: transform
-    - terraformtypesuffix: transformer
-      manifestid: transformer_FullNameToID
-      resourceuuids:
+    - uc_terraform_type: transformer
+      manifest_id: transformer_FullNameToID
+      resource_uuids:
         __DEFAULT: b9bf352f-b1ee-4fb2-a2eb-d0c346c6404b
-        dev: b9bf352f-b1ee-4fb2-a2eb-d0c346c6404b
+        usercloudsdev-demotenant: b9bf352f-b1ee-4fb2-a2eb-d0c346c6404b
       attributes:
         description: This policy generates a masked name.
         function: |-
@@ -394,21 +431,11 @@ resources:
             	"FinalLength": 12
             }]
         transform_type: transform
-    - terraformtypesuffix: transformer
-      manifestid: transformer_test3
-      resourceuuids:
-        __DEFAULT: d44e3ef5-d641-4cf1-b3ec-f2e1a45a3ad3
-        dev: d44e3ef5-d641-4cf1-b3ec-f2e1a45a3ad3
-      attributes:
-        function: function test (data, parameters) { return 'hello world'; }
-        input_type: string
-        name: test3
-        transform_type: passthrough
-    - terraformtypesuffix: transformer
-      manifestid: transformer_UUID
-      resourceuuids:
+    - uc_terraform_type: transformer
+      manifest_id: transformer_UUID
+      resource_uuids:
         __DEFAULT: e3743f5b-521e-4305-b232-ee82549e1477
-        dev: e3743f5b-521e-4305-b232-ee82549e1477
+        usercloudsdev-demotenant: e3743f5b-521e-4305-b232-ee82549e1477
       attributes:
         description: This policy generates a UUID token for the data.
         function: |-

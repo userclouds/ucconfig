@@ -14,23 +14,23 @@ import (
 
 // Manifest is the top-level object storing a parsed ucconfig manifest file
 type Manifest struct {
-	Resources []Resource `json:"resources"`
+	Resources []Resource `json:"resources" yaml:"resources"`
 }
 
 // Resource stores the config for a single instantiation of a Terraform resource
 type Resource struct {
 	// Terraform resource type suffix, e.g. "userstore_column"
-	TerraformTypeSuffix string `json:"uc_terraform_type"`
+	TerraformTypeSuffix string `json:"uc_terraform_type" yaml:"uc_terraform_type"`
 	// A unique ID for this resource that will be stable across tenants and time. This is used
 	// to produce a Terraform resource path. This can be an arbitrary ID, does not need to be a
 	// UUID.
-	ManifestID string `json:"manifest_id"`
+	ManifestID string `json:"manifest_id" yaml:"manifest_id"`
 	// A map of fully-qualified-tenant-name to resource UUID within that tenant. The key
 	// "__DEFAULT" can be used to set a default UUID when creating this resource in a new
 	// tenant.
-	ResourceUUIDs map[string]string `json:"resource_uuids"`
+	ResourceUUIDs map[string]string `json:"resource_uuids" yaml:"resource_uuids"`
 	// A map of attributes to set on the Terraform resource.
-	Attributes map[string]any `json:"attributes"`
+	Attributes map[string]any `json:"attributes" yaml:"attributes"`
 }
 
 func fromLiveResource(live *liveresource.Resource, fqtn string) Resource {

@@ -111,6 +111,7 @@ var ResourceTypes = []ResourceType{
 			"access_policy":       "access_policy",
 			"columns.column":      "userstore_column",
 			"columns.transformer": "transformer",
+			"purposes":            "userstore_purpose",
 		},
 	},
 	{
