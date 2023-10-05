@@ -5,7 +5,7 @@
       "manifest_id": "userstore_column_email_verified",
       "resource_uuids": {
         "__DEFAULT": "12b3f133-4ad1-4f11-9d7d-313eb7cb95fa",
-        "usercloudsdev-configtest5": "12b3f133-4ad1-4f11-9d7d-313eb7cb95fa"
+        "usercloudsdev-demotenant": "12b3f133-4ad1-4f11-9d7d-313eb7cb95fa"
       },
       "attributes": {
         "index_type": "none",
@@ -19,7 +19,7 @@
       "manifest_id": "userstore_column_email",
       "resource_uuids": {
         "__DEFAULT": "2c7a7c9b-90e8-47e4-8f6e-ec73bd2dec16",
-        "usercloudsdev-configtest5": "2c7a7c9b-90e8-47e4-8f6e-ec73bd2dec16"
+        "usercloudsdev-demotenant": "2c7a7c9b-90e8-47e4-8f6e-ec73bd2dec16"
       },
       "attributes": {
         "index_type": "indexed",
@@ -33,7 +33,7 @@
       "manifest_id": "userstore_column_external_alias",
       "resource_uuids": {
         "__DEFAULT": "2ee3d57d-9756-464e-a5e9-04244936cb9e",
-        "usercloudsdev-configtest5": "2ee3d57d-9756-464e-a5e9-04244936cb9e"
+        "usercloudsdev-demotenant": "2ee3d57d-9756-464e-a5e9-04244936cb9e"
       },
       "attributes": {
         "index_type": "unique",
@@ -47,7 +47,7 @@
       "manifest_id": "userstore_column_picture",
       "resource_uuids": {
         "__DEFAULT": "4d4d0757-3bc2-424d-9caf-a930edb49b69",
-        "usercloudsdev-configtest5": "4d4d0757-3bc2-424d-9caf-a930edb49b69"
+        "usercloudsdev-demotenant": "4d4d0757-3bc2-424d-9caf-a930edb49b69"
       },
       "attributes": {
         "index_type": "none",
@@ -61,7 +61,7 @@
       "manifest_id": "userstore_column_nickname",
       "resource_uuids": {
         "__DEFAULT": "83cc42b0-da8c-4a61-9db1-da70f21bab60",
-        "usercloudsdev-configtest5": "83cc42b0-da8c-4a61-9db1-da70f21bab60"
+        "usercloudsdev-demotenant": "83cc42b0-da8c-4a61-9db1-da70f21bab60"
       },
       "attributes": {
         "index_type": "none",
@@ -72,24 +72,10 @@
     },
     {
       "uc_terraform_type": "userstore_column",
-      "manifest_id": "userstore_column_testcol",
-      "resource_uuids": {
-        "__DEFAULT": "962cb438-f0c4-42a7-9bf0-4dab3a62e3c7",
-        "usercloudsdev-configtest5": "962cb438-f0c4-42a7-9bf0-4dab3a62e3c7"
-      },
-      "attributes": {
-        "index_type": "none",
-        "is_array": false,
-        "name": "testcol",
-        "type": "string"
-      }
-    },
-    {
-      "uc_terraform_type": "userstore_column",
       "manifest_id": "userstore_column_name",
       "resource_uuids": {
         "__DEFAULT": "fe20fd48-a006-4ad8-9208-4aad540d8794",
-        "usercloudsdev-configtest5": "fe20fd48-a006-4ad8-9208-4aad540d8794"
+        "usercloudsdev-demotenant": "fe20fd48-a006-4ad8-9208-4aad540d8794"
       },
       "attributes": {
         "index_type": "indexed",
@@ -99,28 +85,11 @@
       }
     },
     {
-      "uc_terraform_type": "userstore_column_soft_deleted_retention_duration",
-      "manifest_id": "13b72662-8ce2-4e69-8818-74a81675d2b7",
-      "resource_uuids": {
-        "__DEFAULT": "13b72662-8ce2-4e69-8818-74a81675d2b7",
-        "usercloudsdev-configtest5": "13b72662-8ce2-4e69-8818-74a81675d2b7"
-      },
-      "attributes": {
-        "column_id": "@UC_MANIFEST_ID(\"userstore_column_testcol\").id",
-        "duration": {
-          "duration": 6,
-          "unit": "day"
-        },
-        "duration_type": "softdeleted",
-        "purpose_id": "@UC_SYSTEM_OBJECT(\"userstore_purpose\", \"operational\")"
-      }
-    },
-    {
       "uc_terraform_type": "access_policy_template",
       "manifest_id": "access_policy_template_AllowAll",
       "resource_uuids": {
         "__DEFAULT": "1e742248-fdde-4c88-9ea7-2c2106ec7aa8",
-        "usercloudsdev-configtest5": "1e742248-fdde-4c88-9ea7-2c2106ec7aa8"
+        "usercloudsdev-demotenant": "1e742248-fdde-4c88-9ea7-2c2106ec7aa8"
       },
       "attributes": {
         "description": "This template allows all access.",
@@ -133,7 +102,7 @@
       "manifest_id": "access_policy_template_CheckAttribute",
       "resource_uuids": {
         "__DEFAULT": "aad2bf25-311f-467e-9169-a6a89b6d34a6",
-        "usercloudsdev-configtest5": "aad2bf25-311f-467e-9169-a6a89b6d34a6"
+        "usercloudsdev-demotenant": "aad2bf25-311f-467e-9169-a6a89b6d34a6"
       },
       "attributes": {
         "description": "This template returns the value of checkAttribute on the given parameters.",
@@ -146,7 +115,7 @@
       "manifest_id": "transformer_EmailToID",
       "resource_uuids": {
         "__DEFAULT": "0cedf7a4-86ab-450a-9426-478ad0a60faa",
-        "usercloudsdev-configtest5": "0cedf7a4-86ab-450a-9426-478ad0a60faa"
+        "usercloudsdev-demotenant": "0cedf7a4-86ab-450a-9426-478ad0a60faa"
       },
       "attributes": {
         "description": "This policy generates an email token for the given email.",
@@ -162,7 +131,7 @@
       "manifest_id": "transformer_SSNToID",
       "resource_uuids": {
         "__DEFAULT": "3f65ee22-2241-4694-bbe3-72cefbe59ff2",
-        "usercloudsdev-configtest5": "3f65ee22-2241-4694-bbe3-72cefbe59ff2"
+        "usercloudsdev-demotenant": "3f65ee22-2241-4694-bbe3-72cefbe59ff2"
       },
       "attributes": {
         "description": "This policy generates a masked SSN.",
@@ -178,7 +147,7 @@
       "manifest_id": "transformer_CreditCardToID",
       "resource_uuids": {
         "__DEFAULT": "618a4ae7-9979-4ee8-bac5-db87335fe4d9",
-        "usercloudsdev-configtest5": "618a4ae7-9979-4ee8-bac5-db87335fe4d9"
+        "usercloudsdev-demotenant": "618a4ae7-9979-4ee8-bac5-db87335fe4d9"
       },
       "attributes": {
         "description": "This policy generates a masked credit card number.",
@@ -194,7 +163,7 @@
       "manifest_id": "transformer_FullNameToID",
       "resource_uuids": {
         "__DEFAULT": "b9bf352f-b1ee-4fb2-a2eb-d0c346c6404b",
-        "usercloudsdev-configtest5": "b9bf352f-b1ee-4fb2-a2eb-d0c346c6404b"
+        "usercloudsdev-demotenant": "b9bf352f-b1ee-4fb2-a2eb-d0c346c6404b"
       },
       "attributes": {
         "description": "This policy generates a masked name.",
@@ -210,7 +179,7 @@
       "manifest_id": "transformer_UUID",
       "resource_uuids": {
         "__DEFAULT": "e3743f5b-521e-4305-b232-ee82549e1477",
-        "usercloudsdev-configtest5": "e3743f5b-521e-4305-b232-ee82549e1477"
+        "usercloudsdev-demotenant": "e3743f5b-521e-4305-b232-ee82549e1477"
       },
       "attributes": {
         "description": "This policy generates a UUID token for the data.",
