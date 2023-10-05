@@ -11,6 +11,7 @@ import (
 	"userclouds.com/cmd/ucconfig/internal/resourcetypes"
 	"userclouds.com/idp"
 	"userclouds.com/idp/userstore"
+	"userclouds.com/infra/ucdb"
 	"userclouds.com/infra/ucerr"
 )
 
@@ -118,6 +119,12 @@ func MakeLiveResource(ctx context.Context, resourceType resourcetypes.ResourceTy
 	isSystem := false
 	for i := 0; i < v.NumField(); i++ {
 		jsonKey := strings.Split(v.Type().Field(i).Tag.Get("json"), ",")[0]
+		// We have a small handful of model that are used both for the database
+		// and for the API. May need to extract IsSystem from those models.
+		if v.Type().Field(i).Type == reflect.TypeOf(ucdb.SystemAttributeBaseModel{}) {
+			isSystem = v.Field(i).Interface().(ucdb.SystemAttributeBaseModel).IsSystem
+			continue
+		}
 		// Skip internal fields not used in the API
 		if jsonKey == "" {
 			continue

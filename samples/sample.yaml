@@ -76,36 +76,6 @@ resources:
             - '@UC_SYSTEM_OBJECT("userstore_purpose", "operational")'
         selector_config:
             where_clause: '{id} = ANY(?)'
-    - uc_terraform_type: access_policy_template
-      manifest_id: access_policy_template_AllowAll
-      resource_uuids:
-        __DEFAULT: 1e742248-fdde-4c88-9ea7-2c2106ec7aa8
-        usercloudsdev-demotenant: 1e742248-fdde-4c88-9ea7-2c2106ec7aa8
-      attributes:
-        description: This template allows all access.
-        function: |-
-            function policy(context, params) {
-            		return true;
-            	}
-        name: AllowAll
-    - uc_terraform_type: access_policy_template
-      manifest_id: access_policy_template_CheckAttribute
-      resource_uuids:
-        __DEFAULT: aad2bf25-311f-467e-9169-a6a89b6d34a6
-        usercloudsdev-demotenant: aad2bf25-311f-467e-9169-a6a89b6d34a6
-      attributes:
-        description: This template returns the value of checkAttribute on the given parameters.
-        function: |-
-            function policy(context, params) {
-            		const id1 = params.userIDUsage === "id1" ? context.user.id : params.id1;
-            		const id2 = params.userIDUsage === "id2" ? context.user.id : params.id2;
-            		const attribute = params.attribute;
-            		if (!id1 || !id2 || !attribute) {
-            			return false;
-            		}
-            		return checkAttribute(id1, id2, attribute);
-            	}
-        name: CheckAttribute
     - uc_terraform_type: transformer
       manifest_id: transformer_EmailToID
       resource_uuids:
