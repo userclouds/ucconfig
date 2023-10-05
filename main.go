@@ -16,10 +16,13 @@ import (
 )
 
 type cliContext struct {
-	Context context.Context
-	// fully-qualified tenant name, e.g. "mycompany-mytenant"
-	FQTN      string
+	Context   context.Context
 	IDPClient *idp.Client
+	// fully-qualified tenant name, e.g. "mycompany-mytenant"
+	FQTN         string
+	TenantURL    string
+	ClientID     string
+	ClientSecret string
 }
 
 type applyCmd struct {
@@ -28,7 +31,7 @@ type applyCmd struct {
 
 // Run implements the apply subcommand
 func (c *applyCmd) Run(ctx *cliContext) error {
-	cmd.Apply(ctx.Context, ctx.IDPClient, ctx.FQTN, c.ManifestPath)
+	cmd.Apply(ctx.Context, ctx.IDPClient, ctx.FQTN, ctx.TenantURL, ctx.ClientID, ctx.ClientSecret, c.ManifestPath)
 	return nil
 }
 
@@ -72,6 +75,13 @@ func main() {
 		uclog.Fatalf(ctx, "Failed to initialize IDP client: %v", err)
 	}
 
-	err = cliCtx.Run(&cliContext{Context: ctx, IDPClient: idpClient, FQTN: fqtn})
+	err = cliCtx.Run(&cliContext{
+		Context:      ctx,
+		IDPClient:    idpClient,
+		FQTN:         fqtn,
+		TenantURL:    cli.TenantURL,
+		ClientID:     cli.ClientID,
+		ClientSecret: cli.ClientSecret,
+	})
 	cliCtx.FatalIfErrorf(err)
 }
