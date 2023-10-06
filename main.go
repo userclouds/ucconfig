@@ -27,11 +27,13 @@ type cliContext struct {
 
 type applyCmd struct {
 	ManifestPath string `arg:"" name:"manifest-path" help:"Path to UC JSON manifest file" type:"path"`
+	DryRun       bool   `help:"Don't actually apply the manifest, just print what would be done."`
+	AutoApprove  bool   `help:"Don't prompt for confirmation before applying the manifest."`
 }
 
 // Run implements the apply subcommand
 func (c *applyCmd) Run(ctx *cliContext) error {
-	cmd.Apply(ctx.Context, ctx.IDPClient, ctx.FQTN, ctx.TenantURL, ctx.ClientID, ctx.ClientSecret, c.ManifestPath)
+	cmd.Apply(ctx.Context, c.DryRun, c.AutoApprove, ctx.IDPClient, ctx.FQTN, ctx.TenantURL, ctx.ClientID, ctx.ClientSecret, c.ManifestPath)
 	return nil
 }
 
