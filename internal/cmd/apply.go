@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 
@@ -46,7 +47,11 @@ func genTerraform(ctx context.Context, mfest *manifest.Manifest, fqtn string, re
 }
 
 // Apply implements a "ucconfig apply" subcommand that applies a manifest.
-func Apply(ctx context.Context, idpClient *idp.Client, fqtn string, tenantURL string, clientID string, clientSecret string, manifestPath string) {
+func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client, fqtn string, tenantURL string, clientID string, clientSecret string, manifestPath string) {
+	if dryRun && autoApprove {
+		uclog.Fatalf(ctx, "dry run and auto approve flags are mutually exclusive")
+	}
+
 	uclog.Infof(ctx, "Reading manifest from %s...", manifestPath)
 	manifestText, err := os.ReadFile(manifestPath)
 	if err != nil {
@@ -98,8 +103,19 @@ func Apply(ctx context.Context, idpClient *idp.Client, fqtn string, tenantURL st
 		uclog.Fatalf(ctx, "Failed to run terraform init: %v", err)
 	}
 
-	uclog.Infof(ctx, "Running terraform apply...")
-	cmd = exec.Command("terraform", "apply")
+	cmdArgs := make([]string, 0, 3)
+
+	if dryRun {
+		cmdArgs = append(cmdArgs, "plan")
+
+	} else {
+		cmdArgs = append(cmdArgs, "apply")
+		if autoApprove {
+			cmdArgs = append(cmdArgs, "-auto-approve")
+		}
+	}
+	uclog.Infof(ctx, "Running terraform %s...", strings.Join(cmdArgs, " "))
+	cmd = exec.Command("terraform", cmdArgs...)
 	cmd.Dir = dname
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

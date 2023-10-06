@@ -41,4 +41,5 @@ func GenerateNewManifest(ctx context.Context, idpClient *idp.Client, fqtn string
 	if err != nil {
 		uclog.Fatalf(ctx, "Failed to write manifest: %v", ucerr.Wrap(err))
 	}
+	uclog.Infof(ctx, "Wrote %d resources into manifest: %s", len(mfest.Resources), manifestPath)
 }
