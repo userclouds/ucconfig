@@ -12,11 +12,20 @@ import (
 	"userclouds.com/infra/ucerr"
 )
 
-func genResourceConfig(resource *manifest.Resource, mfest *manifest.Manifest, fqtn string, liveResources *[]liveresource.Resource, body *hclwrite.Body) error {
+// GenerationContext stores info that is needed for generating the Terraform
+// configuration
+type GenerationContext struct {
+	ManifestFilePath string
+	Manifest         *manifest.Manifest
+	FQTN             string // fully-qualified tenant name
+	LiveResources    *[]liveresource.Resource
+}
+
+func genResourceConfig(resource *manifest.Resource, ctx *GenerationContext, body *hclwrite.Body) error {
 	block := body.AppendNewBlock("resource", []string{"userclouds_" + resource.TerraformTypeSuffix, "manifestid-" + resource.ManifestID})
 	var resourceUUID string
-	if resource.ResourceUUIDs[fqtn] != "" {
-		resourceUUID = resource.ResourceUUIDs[fqtn]
+	if resource.ResourceUUIDs[ctx.FQTN] != "" {
+		resourceUUID = resource.ResourceUUIDs[ctx.FQTN]
 	} else {
 		resourceUUID = resource.ResourceUUIDs["__DEFAULT"]
 	}
@@ -27,7 +36,7 @@ func genResourceConfig(resource *manifest.Resource, mfest *manifest.Manifest, fq
 	}
 	sort.Strings(keys)
 	for _, key := range keys {
-		tokens, err := toHclTokens(resource.Attributes[key], mfest, liveResources)
+		tokens, err := toHclTokens(resource.Attributes[key], ctx)
 		if err != nil {
 			return ucerr.Errorf("Manifest ID %s: %v", resource.ManifestID, err)
 		}
@@ -39,7 +48,7 @@ func genResourceConfig(resource *manifest.Resource, mfest *manifest.Manifest, fq
 }
 
 // GenConfig generates a terraform config file from a ucconfig manifest
-func GenConfig(mfest *manifest.Manifest, fqtn string, liveResources *[]liveresource.Resource) (string, error) {
+func GenConfig(ctx *GenerationContext) (string, error) {
 	// required providers
 	file := hclwrite.NewEmptyFile()
 	file.Body().
@@ -56,8 +65,8 @@ func GenConfig(mfest *manifest.Manifest, fqtn string, liveResources *[]liveresou
 	file.Body().AppendNewline()
 
 	// gen resources
-	for _, resource := range mfest.Resources {
-		if err := genResourceConfig(&resource, mfest, fqtn, liveResources, file.Body()); err != nil {
+	for _, resource := range ctx.Manifest.Resources {
+		if err := genResourceConfig(&resource, ctx, file.Body()); err != nil {
 			return "", ucerr.Wrap(err)
 		}
 	}

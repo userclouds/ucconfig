@@ -39,7 +39,10 @@ func TestGenConfig(t *testing.T) {
 			},
 		},
 	}
-	terraform, err := GenConfig(&config, "prod", nil)
+	terraform, err := GenConfig(&GenerationContext{
+		Manifest: &config,
+		FQTN:     "mycompany-prod",
+	})
 	assert.NoErr(t, err)
 	assert.Equal(t, strings.TrimSpace(terraform), strings.TrimSpace(`
 terraform {

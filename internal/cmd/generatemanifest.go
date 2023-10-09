@@ -18,7 +18,26 @@ import (
 func GenerateNewManifest(ctx context.Context, idpClient *idp.Client, fqtn string, manifestPath string) {
 	uclog.Infof(ctx, "Generating new manifest from live resource state...")
 
-	mfest, err := manifest.GenerateNewManifest(ctx, idpClient, fqtn)
+	manifestBasename := filepath.Base(manifestPath)
+	externValuesDirName := manifestBasename[:len(manifestBasename)-len(filepath.Ext(manifestBasename))] + "_values"
+	externValuesDirPath, err := filepath.Abs(filepath.Dir(manifestPath) + "/" + externValuesDirName)
+	if err != nil {
+		uclog.Fatalf(ctx, "Failed to get absolute path for storing attribute values externally: %v", ucerr.Wrap(err))
+	}
+	// Clear out the target directory if it already exists. If the user has
+	// deleted some resources (e.g. deleted a transformer), we don't want to
+	// keep the associated value files around
+	if os.RemoveAll(externValuesDirPath) != nil {
+		uclog.Fatalf(ctx, "Failed to clear directory %s for storing attribute values externally: %v", externValuesDirPath, ucerr.Wrap(err))
+	}
+	if os.MkdirAll(externValuesDirPath, 0755) != nil {
+		uclog.Fatalf(ctx, "Failed to create directory %s for storing attribute values externally: %v", externValuesDirPath, ucerr.Wrap(err))
+	}
+
+	mfest, err := manifest.GenerateNewManifest(ctx, idpClient, fqtn, &manifest.ExternValuesDirConfig{
+		AbsolutePath:             externValuesDirPath,
+		RelativePathFromManifest: "./" + externValuesDirName,
+	})
 	if err != nil {
 		uclog.Fatalf(ctx, "Failed to generate manifest: %v", ucerr.Wrap(err))
 	}
@@ -41,4 +60,5 @@ func GenerateNewManifest(ctx context.Context, idpClient *idp.Client, fqtn string
 	if err != nil {
 		uclog.Fatalf(ctx, "Failed to write manifest: %v", ucerr.Wrap(err))
 	}
+	uclog.Infof(ctx, "Wrote %d resources into manifest: %s", len(mfest.Resources), manifestPath)
 }

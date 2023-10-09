@@ -3,7 +3,9 @@ package manifest
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
+	"strings"
 
 	"userclouds.com/cmd/ucconfig/internal/liveresource"
 	"userclouds.com/cmd/ucconfig/internal/resourcetypes"
@@ -55,45 +57,90 @@ func fromLiveResource(live *liveresource.Resource, fqtn string) Resource {
 	}
 }
 
-// rewriteManifestReferences takes a resource attribute value and returns a rewritten value if it is
-// a reference to another resource. Restated, if the supplied value isn't a reference to another
-// resource, the value will be returned unchanged, but if it is a reference, this function will
-// return the text of a `@UC_*()` function call to implement that reference.
-//
-// Whether the value is a reference is determined by References in the supplied ResourceType.
-func rewriteManifestReferences(data any, currAttrPath string, forResource resourcetypes.ResourceType, mfest *Manifest, fqtn string, liveResources *[]liveresource.Resource) (any, error) {
+func (r *Resource) getResourceType() resourcetypes.ResourceType {
+	return *resourcetypes.GetByTerraformTypeSuffix(r.TerraformTypeSuffix)
+}
+
+// ExternValuesDirConfig stores paths for storing attribute values in an
+// external directory (e.g. JS function definition strings).
+type ExternValuesDirConfig struct {
+	// AbsolutePath stores the path to the directory so that we can write files there
+	AbsolutePath string
+	// RelativePathFromManifest stores the relative path from where the manifest
+	// will be written. This affects the "@FILE(path)" function calls that will
+	// be written to the manifest, so that anyone applying the manifest can get
+	// these extern values relative to the manifest.
+	RelativePathFromManifest string
+}
+
+type functionGenerationContext struct {
+	Manifest        *Manifest
+	FQTN            string
+	LiveResources   *[]liveresource.Resource
+	ExternValuesDir *ExternValuesDirConfig
+}
+
+// rewriteManifestAttribute takes a resource attribute value and returns a
+// rewritten value if it should use a function call instead (e.g. if the value
+// is a reference to another resource, which should be a UC_MANIFEST_ID function
+// call instead). Restated, if the supplied value has no references to another
+// resource or other special desired behavior, the value will be returned
+// unchanged, but otherwise this function will return the text of a
+// `@FUNCTIONNAME()` function call to implement the desired behavior.
+func rewriteManifestAttribute(data any, currAttrPath string, forResource *Resource, ctx *functionGenerationContext) (any, error) {
 	v := reflect.ValueOf(data)
 
 	if v.Kind() == reflect.Pointer {
-		return rewriteManifestReferences(v.Elem().Interface(), currAttrPath, forResource, mfest, fqtn, liveResources)
+		return rewriteManifestAttribute(v.Elem().Interface(), currAttrPath, forResource, ctx)
 	}
 
-	if v.Kind() == reflect.String && forResource.References[currAttrPath] != "" {
+	if v.Kind() == reflect.String && forResource.getResourceType().References[currAttrPath] != "" {
 		// This should be a reference to another resource. Rewrite the value to reference the other
 		// resource. Note: we are using mfest.Resources instead of liveResources here, because we
 		// want to get the manifest IDs, which are guaranteed to be set properly in the manifest
 		// struct
 		ref := v.String()
-		for _, r := range mfest.Resources {
-			if r.TerraformTypeSuffix == forResource.References[currAttrPath] && r.ResourceUUIDs[fqtn] == ref {
+		for _, r := range ctx.Manifest.Resources {
+			if r.TerraformTypeSuffix == forResource.getResourceType().References[currAttrPath] && r.ResourceUUIDs[ctx.FQTN] == ref {
 				return `@UC_MANIFEST_ID("` + r.ManifestID + `").id`, nil
 			}
 		}
 		// If we didn't find a match to a resource in the manifest, try seeing if we can match a
 		// system object
-		for _, r := range *liveResources {
-			if r.TerraformTypeSuffix == forResource.References[currAttrPath] && r.IsSystem && r.ResourceUUID == ref {
+		for _, r := range *ctx.LiveResources {
+			if r.TerraformTypeSuffix == forResource.getResourceType().References[currAttrPath] && r.IsSystem && r.ResourceUUID == ref {
 				return `@UC_SYSTEM_OBJECT("` + r.TerraformTypeSuffix + `", "` + r.Attributes["name"].(string) + `")`, nil
 			}
 		}
-		return nil, ucerr.Errorf("this should be a reference to a %s resource, but the live resource state we fetched doesn't contain such a resource with UUID %s", forResource.References[currAttrPath], ref)
+		return nil, ucerr.Errorf("this should be a reference to a %s resource, but the live resource state we fetched doesn't contain such a resource with UUID %s", forResource.getResourceType().References[currAttrPath], ref)
+	}
+
+	// Rewrite external attributes
+	if extension, ok := forResource.getResourceType().WriteAttributesExternally[currAttrPath]; ok && ctx.ExternValuesDir != nil {
+		if v.Kind() != reflect.String {
+			return nil, ucerr.Errorf("attribute %s is marked as an external attribute, but the value is not a string", currAttrPath)
+		}
+		val := v.String()
+
+		nameOrID := forResource.ManifestID
+		if name, ok := forResource.Attributes["name"]; ok && reflect.TypeOf(name).Kind() == reflect.String {
+			nameOrID = name.(string)
+		}
+		targetFileName := forResource.TerraformTypeSuffix + "_" + nameOrID + "_" + strings.ReplaceAll(currAttrPath, ".", "_") + extension
+		targetPath := ctx.ExternValuesDir.AbsolutePath + "/" + targetFileName
+		// Write file with trailing newline (since most text editors will insert
+		// one upon save)
+		if err := os.WriteFile(targetPath, []byte(val+"\n"), 0644); err != nil {
+			return nil, ucerr.Errorf("error writing external attribute value to %s for attribute %s: %v", targetPath, currAttrPath, err)
+		}
+		return `@FILE("` + ctx.ExternValuesDir.RelativePathFromManifest + "/" + targetFileName + `")`, nil
 	}
 
 	if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
 		var out []any
 		for i := 0; i < v.Len(); i++ {
 			val := v.Index(i).Interface()
-			rewritten, err := rewriteManifestReferences(val, currAttrPath, forResource, mfest, fqtn, liveResources)
+			rewritten, err := rewriteManifestAttribute(val, currAttrPath, forResource, ctx)
 			if err != nil {
 				return nil, ucerr.Errorf("error rewriting value at array index %v: %v", i, err)
 			}
@@ -106,7 +153,7 @@ func rewriteManifestReferences(data any, currAttrPath string, forResource resour
 		out := map[string]any{}
 		for _, key := range v.MapKeys() {
 			val := v.MapIndex(key).Interface()
-			rewritten, err := rewriteManifestReferences(val, currAttrPath+"."+key.String(), forResource, mfest, fqtn, liveResources)
+			rewritten, err := rewriteManifestAttribute(val, currAttrPath+"."+key.String(), forResource, ctx)
 			if err != nil {
 				return nil, ucerr.Errorf("error rewriting value at map key %s: %v", key, err)
 			}
@@ -203,12 +250,13 @@ func (mfest *Manifest) MatchLiveResources(ctx context.Context, liveResources *[]
 	return nil
 }
 
-// RewriteReferences updates the attribute values for this resource: where attributes have UUID IDs
-// referring to other resources, those values will be replaced with string `@UC_*()` function
-// invocations to refer to those other resources.
-func (r *Resource) RewriteReferences(mfest *Manifest, fqtn string, liveResources *[]liveresource.Resource) error {
+// RewriteWithFunctionCalls updates the attribute values for this resource:
+// where attribute values should have special behavior (e.g. a UUID that is a
+// reference to a different resource ID), those values will be replaced with
+// string `@FUNCTIONNAME()` function invocations.
+func (r *Resource) RewriteWithFunctionCalls(ctx *functionGenerationContext) error {
 	for key, value := range r.Attributes {
-		rewritten, err := rewriteManifestReferences(value, key, *resourcetypes.GetByTerraformTypeSuffix(r.TerraformTypeSuffix), mfest, fqtn, liveResources)
+		rewritten, err := rewriteManifestAttribute(value, key, r, ctx)
 		if err != nil {
 			return ucerr.Errorf("error rewriting manifest reference for %s attribute %s: %v", r.TerraformTypeSuffix, key, err)
 		}
@@ -233,7 +281,7 @@ func (mfest *Manifest) Validate(fqtn string) error {
 	return nil
 }
 
-func generateFromLiveResources(ctx context.Context, liveResources *[]liveresource.Resource, fqtn string) (Manifest, error) {
+func generateFromLiveResources(ctx context.Context, liveResources *[]liveresource.Resource, fqtn string, externValuesDir *ExternValuesDirConfig) (Manifest, error) {
 	var resourceManifests []Resource
 	for _, r := range *liveResources {
 		if r.IsSystem {
@@ -247,7 +295,12 @@ func generateFromLiveResources(ctx context.Context, liveResources *[]liveresourc
 		Resources: resourceManifests,
 	}
 	for i := range mfest.Resources {
-		if err := mfest.Resources[i].RewriteReferences(&mfest, fqtn, liveResources); err != nil {
+		if err := mfest.Resources[i].RewriteWithFunctionCalls(&functionGenerationContext{
+			Manifest:        &mfest,
+			LiveResources:   liveResources,
+			FQTN:            fqtn,
+			ExternValuesDir: externValuesDir,
+		}); err != nil {
 			return Manifest{}, ucerr.Wrap(err)
 		}
 	}
@@ -256,10 +309,14 @@ func generateFromLiveResources(ctx context.Context, liveResources *[]liveresourc
 
 // GenerateNewManifest fetches the live resources using the UC API and returns
 // a new Manifest struct describing those resources.
-func GenerateNewManifest(ctx context.Context, client *idp.Client, fqtn string) (Manifest, error) {
+//
+// The optional externAttrValuesDir specifies a directory where attribute values
+// can be stored for attributes that we'd prefer to not specify inline in the
+// manifest (e.g. Javascript function definitions).
+func GenerateNewManifest(ctx context.Context, client *idp.Client, fqtn string, externValuesDir *ExternValuesDirConfig) (Manifest, error) {
 	liveResources, err := liveresource.GetLiveResources(ctx, client)
 	if err != nil {
 		return Manifest{}, ucerr.Wrap(err)
 	}
-	return generateFromLiveResources(ctx, &liveResources, fqtn)
+	return generateFromLiveResources(ctx, &liveResources, fqtn, externValuesDir)
 }

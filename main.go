@@ -16,40 +16,67 @@ import (
 )
 
 type cliContext struct {
-	Context   context.Context
+	Context context.Context
+}
+
+// CLI flags for subcommands that access a tenant
+type tenantConfig struct {
+	TenantURL    string `env:"USERCLOUDS_TENANT_URL" required:"" help:"Tenant URL."`
+	ClientID     string `env:"USERCLOUDS_CLIENT_ID" required:"" help:"Client ID."`
+	ClientSecret string `env:"USERCLOUDS_CLIENT_SECRET" required:"" help:"Client secret."`
+}
+
+func (cfg tenantConfig) initTenantContext(ctx context.Context) tenantContext {
+	url, err := url.Parse(cfg.TenantURL)
+	if err != nil {
+		uclog.Fatalf(ctx, "Failed to parse tenant URL: %v", err)
+	}
+	fqtn := strings.Split(url.Hostname(), ".")[0]
+
+	// Initialize IDP client based on env vars
+	tokenSource := jsonclient.ClientCredentialsTokenSource(cfg.TenantURL+"/oidc/token", cfg.ClientID, cfg.ClientSecret, nil)
+	idpClient, err := idp.NewClient(cfg.TenantURL, idp.OrganizationID(uuid.Nil), idp.JSONClient(tokenSource))
+	if err != nil {
+		uclog.Fatalf(ctx, "Failed to initialize IDP client: %v", err)
+	}
+
+	return tenantContext{FQTN: fqtn, IDPClient: idpClient}
+}
+
+// for subcommands that access a tenant
+type tenantContext struct {
 	IDPClient *idp.Client
 	// fully-qualified tenant name, e.g. "mycompany-mytenant"
-	FQTN         string
-	TenantURL    string
-	ClientID     string
-	ClientSecret string
+	FQTN string
 }
 
 type applyCmd struct {
+	tenantConfig
 	ManifestPath string `arg:"" name:"manifest-path" help:"Path to UC JSON manifest file" type:"path"`
+	DryRun       bool   `help:"Don't actually apply the manifest, just print what would be done."`
+	AutoApprove  bool   `help:"Don't prompt for confirmation before applying the manifest."`
 }
 
 // Run implements the apply subcommand
 func (c *applyCmd) Run(ctx *cliContext) error {
-	cmd.Apply(ctx.Context, ctx.IDPClient, ctx.FQTN, ctx.TenantURL, ctx.ClientID, ctx.ClientSecret, c.ManifestPath)
+	tenantCtx := c.initTenantContext(ctx.Context)
+	cmd.Apply(ctx.Context, c.DryRun, c.AutoApprove, tenantCtx.IDPClient, tenantCtx.FQTN, c.TenantURL, c.ClientID, c.ClientSecret, c.ManifestPath)
 	return nil
 }
 
 type genManifestCmd struct {
+	tenantConfig
 	ManifestPath string `arg:"" name:"manifest-path" help:"Path to UC JSON manifest file" type:"path"`
 }
 
 // Run implements the gen-manifest subcommand
 func (c *genManifestCmd) Run(ctx *cliContext) error {
-	cmd.GenerateNewManifest(ctx.Context, ctx.IDPClient, ctx.FQTN, c.ManifestPath)
+	tenantCtx := c.initTenantContext(ctx.Context)
+	cmd.GenerateNewManifest(ctx.Context, tenantCtx.IDPClient, tenantCtx.FQTN, c.ManifestPath)
 	return nil
 }
 
 var cli struct {
-	TenantURL    string `env:"USERCLOUDS_TENANT_URL" required:"" help:"Tenant URL."`
-	ClientID     string `env:"USERCLOUDS_CLIENT_ID" required:"" help:"Client ID."`
-	ClientSecret string `env:"USERCLOUDS_CLIENT_SECRET" required:"" help:"Client secret."`
-
 	Apply       applyCmd       `cmd:"" help:"Apply a config manifest file, modifying the live tenant to match what the manifest describes."`
 	GenManifest genManifestCmd `cmd:"" help:"Generate a JSON manifest file from a live tenant."`
 }
@@ -61,27 +88,6 @@ func main() {
 
 	cliCtx := kong.Parse(&cli)
 
-	url, err := url.Parse(cli.TenantURL)
-	if err != nil {
-		uclog.Fatalf(ctx, "Failed to parse tenant URL: %v", err)
-	}
-	fqtn := strings.Split(url.Hostname(), ".")[0]
-
-	// Initialize IDP client based on env vars
-	tokenSource := jsonclient.ClientCredentialsTokenSource(cli.TenantURL+"/oidc/token", cli.ClientID, cli.ClientSecret, nil)
-	orgID := uuid.Nil
-	idpClient, err := idp.NewClient(cli.TenantURL, idp.OrganizationID(orgID), idp.JSONClient(tokenSource))
-	if err != nil {
-		uclog.Fatalf(ctx, "Failed to initialize IDP client: %v", err)
-	}
-
-	err = cliCtx.Run(&cliContext{
-		Context:      ctx,
-		IDPClient:    idpClient,
-		FQTN:         fqtn,
-		TenantURL:    cli.TenantURL,
-		ClientID:     cli.ClientID,
-		ClientSecret: cli.ClientSecret,
-	})
+	err := cliCtx.Run(&cliContext{Context: ctx})
 	cliCtx.FatalIfErrorf(err)
 }
