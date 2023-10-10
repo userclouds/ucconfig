@@ -3,10 +3,10 @@ package manifest
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"testing"
 
 	"userclouds.com/cmd/ucconfig/internal/liveresource"
-	"userclouds.com/cmd/ucconfig/internal/resourcetypes"
 	"userclouds.com/infra/assert"
 )
 
@@ -35,7 +35,7 @@ func TestGenerateNewManifest(t *testing.T) {
 			},
 		},
 	}
-	mfest, err := generateFromLiveResources(ctx, &resources, "prod")
+	mfest, err := generateFromLiveResources(ctx, &resources, "prod", nil)
 	assert.NoErr(t, err)
 	mfestJSON, err := json.MarshalIndent(mfest, "", "\t")
 	assert.NoErr(t, err)
@@ -59,7 +59,7 @@ func TestGenerateNewManifest(t *testing.T) {
 }`, assert.Diff())
 }
 
-func TestRewriteManifestReferencesUCManifestID(t *testing.T) {
+func TestRewriteManifestAttributeUCManifestID(t *testing.T) {
 	// Validate generating @UC_MANIFEST_ID() references
 	val := []any{
 		map[string]any{
@@ -82,13 +82,17 @@ func TestRewriteManifestReferencesUCManifestID(t *testing.T) {
 			},
 		}},
 	}
-	out, err := rewriteManifestReferences(val, "columns", *resourcetypes.GetByTerraformTypeSuffix("userstore_accessor"), &mfest, "prod", &[]liveresource.Resource{})
+	out, err := rewriteManifestAttribute(val, "columns", &Resource{TerraformTypeSuffix: "userstore_accessor"}, &functionGenerationContext{
+		Manifest:      &mfest,
+		FQTN:          "prod",
+		LiveResources: &[]liveresource.Resource{},
+	})
 	assert.NoErr(t, err)
 	assert.Equal(t, out.([]any)[0].(map[string]any)["column"], `@UC_MANIFEST_ID("examplecol").id`)
 	assert.Equal(t, out.([]any)[0].(map[string]any)["transformer"], `@UC_MANIFEST_ID("exampletransformer").id`)
 }
 
-func TestRewriteManifestReferencesUCSystemObject(t *testing.T) {
+func TestRewriteManifestAttributeUCSystemObject(t *testing.T) {
 	// Validate generating @UC_SYSTEM_OBJECT() references
 	val := []any{
 		map[string]any{
@@ -113,8 +117,49 @@ func TestRewriteManifestReferencesUCSystemObject(t *testing.T) {
 			"name": "tform",
 		},
 	}}
-	out, err := rewriteManifestReferences(val, "columns", *resourcetypes.GetByTerraformTypeSuffix("userstore_accessor"), &Manifest{}, "prod", &systemResources)
+	out, err := rewriteManifestAttribute(val, "columns", &Resource{TerraformTypeSuffix: "userstore_accessor"}, &functionGenerationContext{
+		Manifest:      &Manifest{},
+		FQTN:          "prod",
+		LiveResources: &systemResources,
+	})
 	assert.NoErr(t, err)
 	assert.Equal(t, out.([]any)[0].(map[string]any)["column"], `@UC_SYSTEM_OBJECT("userstore_column", "example")`)
 	assert.Equal(t, out.([]any)[0].(map[string]any)["transformer"], `@UC_SYSTEM_OBJECT("transformer", "tform")`)
+}
+
+func TestRewriteWithFunctionCallsForFiles(t *testing.T) {
+	resource := Resource{
+		TerraformTypeSuffix: "transformer",
+		Attributes: map[string]any{
+			"name":     "TestTransformer",
+			"function": "hello world",
+		},
+	}
+
+	tmpdir, err := os.MkdirTemp("", "TestRewriteManifestAttributeFile")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if os.RemoveAll(tmpdir) != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	err = resource.RewriteWithFunctionCalls(&functionGenerationContext{
+		Manifest:      &Manifest{},
+		FQTN:          "prod",
+		LiveResources: &[]liveresource.Resource{},
+		ExternValuesDir: &ExternValuesDirConfig{
+			AbsolutePath:             tmpdir,
+			RelativePathFromManifest: ".",
+		},
+	})
+	assert.NoErr(t, err)
+	assert.Equal(t, resource.Attributes["function"], `@FILE("./transformer_TestTransformer_function.js")`)
+
+	contents, err := os.ReadFile(tmpdir + "/transformer_TestTransformer_function.js")
+	assert.NoErr(t, err)
+	// Should have trailing newline (like most editors insert)
+	assert.Equal(t, string(contents), "hello world\n")
 }
