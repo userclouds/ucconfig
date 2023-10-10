@@ -15,6 +15,11 @@ type ResourceType struct {
 	// References maps attribute paths (e.g. "columns.column") to the terraform type suffix of the
 	// resource UUIDs they reference
 	References map[string]string
+	// WriteAttributesExternally maps attribute paths (e.g.
+	// "child_object.attr_with_long_value") to file extensions (e.g. ".js") for
+	// attributes whose values should be stored in an external file, rather than
+	// inline in a generated manifest
+	WriteAttributesExternally map[string]string
 	// OmitAttributes is a list of resource attributes that should be omitted from manifest
 	// generation, e.g. if there are superfluous details returned in ListWhateverObject API calls
 	// that we don't need to include
@@ -134,6 +139,11 @@ var ResourceTypes = []ResourceType{
 				out = append(out, d)
 			}
 			return out, nil
+		},
+		WriteAttributesExternally: map[string]string{
+			// The JS function should be stored separately to facilitate linting
+			// and syntax highlighting
+			"function": ".js",
 		},
 	},
 }

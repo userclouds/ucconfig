@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 
@@ -17,8 +18,13 @@ import (
 	"userclouds.com/infra/uclog"
 )
 
-func genTerraform(ctx context.Context, mfest *manifest.Manifest, fqtn string, resources *[]liveresource.Resource, tfDir string) {
-	tfText, err := genconfig.GenConfig(mfest, fqtn, resources)
+func genTerraform(ctx context.Context, mfestPath string, mfest *manifest.Manifest, fqtn string, resources *[]liveresource.Resource, tfDir string) {
+	tfText, err := genconfig.GenConfig(&genconfig.GenerationContext{
+		ManifestFilePath: mfestPath,
+		Manifest:         mfest,
+		FQTN:             fqtn,
+		LiveResources:    resources,
+	})
 	if err != nil {
 		uclog.Fatalf(ctx, "Failed to generate Terraform config: %v", err)
 	}
@@ -46,7 +52,11 @@ func genTerraform(ctx context.Context, mfest *manifest.Manifest, fqtn string, re
 }
 
 // Apply implements a "ucconfig apply" subcommand that applies a manifest.
-func Apply(ctx context.Context, idpClient *idp.Client, fqtn string, tenantURL string, clientID string, clientSecret string, manifestPath string) {
+func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client, fqtn string, tenantURL string, clientID string, clientSecret string, manifestPath string) {
+	if dryRun && autoApprove {
+		uclog.Fatalf(ctx, "dry run and auto approve flags are mutually exclusive")
+	}
+
 	uclog.Infof(ctx, "Reading manifest from %s...", manifestPath)
 	manifestText, err := os.ReadFile(manifestPath)
 	if err != nil {
@@ -85,7 +95,7 @@ func Apply(ctx context.Context, idpClient *idp.Client, fqtn string, tenantURL st
 		uclog.Fatalf(ctx, "Failed to create temporary directory: %v", err)
 	}
 	uclog.Infof(ctx, "Terraform files will be generated in %s", dname)
-	genTerraform(ctx, &mfest, fqtn, &resources, dname)
+	genTerraform(ctx, manifestPath, &mfest, fqtn, &resources, dname)
 
 	uclog.Infof(ctx, "Running terraform init...")
 	cmd := exec.Command("terraform", "init")
@@ -98,8 +108,19 @@ func Apply(ctx context.Context, idpClient *idp.Client, fqtn string, tenantURL st
 		uclog.Fatalf(ctx, "Failed to run terraform init: %v", err)
 	}
 
-	uclog.Infof(ctx, "Running terraform apply...")
-	cmd = exec.Command("terraform", "apply")
+	cmdArgs := make([]string, 0, 3)
+
+	if dryRun {
+		cmdArgs = append(cmdArgs, "plan")
+
+	} else {
+		cmdArgs = append(cmdArgs, "apply")
+		if autoApprove {
+			cmdArgs = append(cmdArgs, "-auto-approve")
+		}
+	}
+	uclog.Infof(ctx, "Running terraform %s...", strings.Join(cmdArgs, " "))
+	cmd = exec.Command("terraform", cmdArgs...)
 	cmd.Dir = dname
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
