@@ -126,6 +126,11 @@ var ResourceTypes = []ResourceType{
 			}
 			return out, nil
 		},
+		WriteAttributesExternally: map[string]string{
+			// The JS function should be stored separately to facilitate linting
+			// and syntax highlighting
+			"function": ".js",
+		},
 	},
 	{
 		TerraformTypeSuffix: "transformer",
