@@ -139,6 +139,12 @@ func MakeLiveResource(ctx context.Context, resourceType resourcetypes.ResourceTy
 			isSystem = v.Field(i).Bool()
 			continue
 		}
+		// Omit the version field from the attributes. It functions as an etag
+		// for versioned resources, and the Terraform provider won't allow it to
+		// be set
+		if jsonKey == "version" {
+			continue
+		}
 		if slices.Contains(resourceType.OmitAttributes, jsonKey) {
 			continue
 		}
