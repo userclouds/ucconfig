@@ -67,3 +67,14 @@ func TestGetLiveResourcesForType(t *testing.T) {
 		},
 	}})
 }
+
+func TestVersionAttributeOmitted(t *testing.T) {
+	res, err := MakeLiveResource(context.Background(), *resourcetypes.GetByTerraformTypeSuffix("userstore_accessor"), userstore.Accessor{
+		ID:      uuid.Must(uuid.FromString("fe20fd48-a006-4ad8-9208-4aad540d8794")),
+		Version: 7,
+		Name:    "TestAccessor",
+	})
+	assert.NoErr(t, err)
+	assert.Equal(t, res.Attributes["name"], "TestAccessor")
+	assert.Equal(t, res.Attributes["version"], nil)
+}
