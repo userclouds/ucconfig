@@ -25,6 +25,15 @@ type Resource struct {
 	Attributes          map[string]any
 }
 
+// TerraformResourceName returns the name that should be used for this resource
+// in the Terraform configuration and state
+func (r *Resource) TerraformResourceName() string {
+	if r.ManifestID != "" {
+		return "manifestid-" + r.ManifestID
+	}
+	return "unmatched-" + r.ResourceUUID
+}
+
 // transformValue takes some value from a UC API model and applies any transformations needed to store
 // that value in the manifest or in TF state.
 func transformValue(data any) (any, error) {

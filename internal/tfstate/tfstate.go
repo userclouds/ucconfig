@@ -1,9 +1,12 @@
 package tfstate
 
 import (
+	"reflect"
+
 	"github.com/gofrs/uuid"
 
 	"userclouds.com/cmd/ucconfig/internal/liveresource"
+	"userclouds.com/cmd/ucconfig/internal/resourcetypes"
 	"userclouds.com/infra/ucerr"
 )
 
@@ -91,6 +94,63 @@ type CheckResult struct {
 	// TODO: we currently aren't using any configuration checks, so leaving this blank
 }
 
+// getDependenciesFromAttribute examines an attribute of a resource and, based
+// on the value of that attribute, infers dependencies on other resources.
+// Dependencies are returned as a list of Terraform resource addresses.
+func getDependenciesFromAttribute(attrVal any, currAttrPath string, forTfTypeSuffix string, allResources *[]liveresource.Resource) ([]string, error) {
+	v := reflect.ValueOf(attrVal)
+
+	if v.Kind() == reflect.Pointer {
+		return getDependenciesFromAttribute(v.Elem().Interface(), currAttrPath, forTfTypeSuffix, allResources)
+	}
+
+	forType := resourcetypes.GetByTerraformTypeSuffix(forTfTypeSuffix)
+	if v.Kind() == reflect.String && forType.References[currAttrPath] != "" && !uuid.Must(uuid.FromString(v.String())).IsNil() {
+		var referenced *liveresource.Resource
+		for i := range *allResources {
+			if (*allResources)[i].TerraformTypeSuffix == forType.References[currAttrPath] && (*allResources)[i].ResourceUUID == v.String() {
+				referenced = &(*allResources)[i]
+				break
+			}
+		}
+		if referenced == nil {
+			return []string{}, ucerr.Errorf("could not find referenced live resource for attrPath %s with UUID %v", currAttrPath, v.String())
+		}
+		if referenced.IsSystem {
+			// Don't write dependencies on system resources, since those are
+			// excluded from the tf config
+			return []string{}, nil
+		}
+		return []string{"userclouds_" + referenced.TerraformTypeSuffix + "." + referenced.TerraformResourceName()}, nil
+	}
+
+	if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
+		var out []string
+		for i := 0; i < v.Len(); i++ {
+			deps, err := getDependenciesFromAttribute(v.Index(i).Interface(), currAttrPath, forTfTypeSuffix, allResources)
+			if err != nil {
+				return []string{}, ucerr.Wrap(err)
+			}
+			out = append(out, deps...)
+		}
+		return out, nil
+	}
+
+	if v.Kind() == reflect.Map {
+		var out []string
+		for _, k := range v.MapKeys() {
+			deps, err := getDependenciesFromAttribute(v.MapIndex(k).Interface(), currAttrPath+"."+k.String(), forTfTypeSuffix, allResources)
+			if err != nil {
+				return []string{}, ucerr.Wrap(err)
+			}
+			out = append(out, deps...)
+		}
+		return out, nil
+	}
+
+	return []string{}, nil
+}
+
 // CreateState creates a State struct from a list of live resources
 func CreateState(resources *[]liveresource.Resource) (State, error) {
 	lineage, err := uuid.NewV4()
@@ -104,27 +164,28 @@ func CreateState(resources *[]liveresource.Resource) (State, error) {
 		if resource.IsSystem {
 			continue
 		}
-		var resourceName string
-		if resource.ManifestID != "" {
-			resourceName = "manifestid-" + resource.ManifestID
-		} else {
-			resourceName = "unmatched-" + resource.ResourceUUID
-		}
 		attributes := map[string]interface{}{}
+		dependencies := []string{}
 		for k, v := range resource.Attributes {
 			attributes[k] = v
+			d, err := getDependenciesFromAttribute(v, k, resource.TerraformTypeSuffix, resources)
+			if err != nil {
+				return State{}, ucerr.Wrap(err)
+			}
+			dependencies = append(dependencies, d...)
 		}
 		attributes["id"] = resource.ResourceUUID
 		stateResources = append(stateResources, Resource{
 			Mode:     "managed",
 			Type:     "userclouds_" + resource.TerraformTypeSuffix,
-			Name:     resourceName,
+			Name:     resource.TerraformResourceName(),
 			Provider: "provider[\"registry.terraform.io/userclouds/userclouds\"]",
 			Instances: []Instance{
 				{
 					SchemaVersion:       0,
 					Attributes:          attributes,
 					SensitiveAttributes: []string{},
+					Dependencies:        dependencies,
 				},
 			},
 		})
