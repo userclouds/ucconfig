@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/alecthomas/kong v0.8.0
-	github.com/gofrs/uuid v4.2.0+incompatible
+	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/hashicorp/hcl/v2 v2.18.0
 	github.com/zclconf/go-cty v1.14.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
