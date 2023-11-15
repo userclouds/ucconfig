@@ -52,15 +52,17 @@ type tenantContext struct {
 
 type applyCmd struct {
 	tenantConfig
-	ManifestPath string `arg:"" name:"manifest-path" help:"Path to UC JSON manifest file" type:"path"`
-	DryRun       bool   `help:"Don't actually apply the manifest, just print what would be done."`
-	AutoApprove  bool   `help:"Don't prompt for confirmation before applying the manifest."`
+	ManifestPath                string `arg:"" name:"manifest-path" help:"Path to UC JSON manifest file" type:"path"`
+	DryRun                      bool   `help:"Don't actually apply the manifest, just print what would be done."`
+	AutoApprove                 bool   `help:"Don't prompt for confirmation before applying the manifest."`
+	TFProviderVersionConstraint string `help:"Version constraint that should be used for the terraform-provider-userclouds provider instantiation, e.g. \"~> 1.0\" or \"= 1.2.3\""`
+	TFProviderDevDirPath        string `help:"Path to the directory containing the terraform-provider-userclouds binary for local provider development"`
 }
 
 // Run implements the apply subcommand
 func (c *applyCmd) Run(ctx *cliContext) error {
 	tenantCtx := c.initTenantContext(ctx.Context)
-	cmd.Apply(ctx.Context, c.DryRun, c.AutoApprove, tenantCtx.IDPClient, tenantCtx.FQTN, c.TenantURL, c.ClientID, c.ClientSecret, c.ManifestPath)
+	cmd.Apply(ctx.Context, c.DryRun, c.AutoApprove, tenantCtx.IDPClient, tenantCtx.FQTN, c.TenantURL, c.ClientID, c.ClientSecret, c.ManifestPath, c.TFProviderVersionConstraint, c.TFProviderDevDirPath)
 	return nil
 }
 

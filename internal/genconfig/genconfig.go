@@ -19,6 +19,8 @@ type GenerationContext struct {
 	Manifest         *manifest.Manifest
 	FQTN             string // fully-qualified tenant name
 	LiveResources    *[]liveresource.Resource
+	// TFProviderVersionConstraint specifies the version constraint that should be used for the terraform-provider-userclouds provider instantiation
+	TFProviderVersionConstraint string // e.g. "~> 1.0"
 }
 
 func genResourceConfig(resource *manifest.Resource, ctx *GenerationContext, body *hclwrite.Body) error {
@@ -56,7 +58,7 @@ func GenConfig(ctx *GenerationContext) (string, error) {
 		AppendNewBlock("required_providers", []string{}).Body().
 		SetAttributeValue("userclouds", cty.ObjectVal(map[string]cty.Value{
 			"source":  cty.StringVal("registry.terraform.io/userclouds/userclouds"),
-			"version": cty.StringVal(">= 0.0.1"),
+			"version": cty.StringVal(ctx.TFProviderVersionConstraint),
 		}))
 	file.Body().AppendNewline()
 

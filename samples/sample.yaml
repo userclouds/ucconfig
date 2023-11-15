@@ -59,6 +59,18 @@ resources:
         is_array: false
         name: name
         type: string
+    - uc_terraform_type: userstore_column_soft_deleted_retention_duration
+      manifest_id: 6af3794c-0741-4011-ba8f-761f4cacae72
+      resource_uuids:
+        __DEFAULT: 6af3794c-0741-4011-ba8f-761f4cacae72
+        usercloudsdev-demotenant: 6af3794c-0741-4011-ba8f-761f4cacae72
+      attributes:
+        column_id: '@UC_MANIFEST_ID("userstore_column_email").id'
+        duration:
+            duration: 30
+            unit: day
+        duration_type: softdeleted
+        purpose_id: '@UC_SYSTEM_OBJECT("userstore_purpose", "operational")'
     - uc_terraform_type: userstore_accessor
       manifest_id: userstore_accessor_DemoAccessor
       resource_uuids:
