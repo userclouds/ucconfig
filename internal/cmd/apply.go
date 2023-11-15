@@ -18,12 +18,35 @@ import (
 	"userclouds.com/infra/uclog"
 )
 
-func genTerraform(ctx context.Context, mfestPath string, mfest *manifest.Manifest, fqtn string, resources *[]liveresource.Resource, tfDir string) {
+func writeTerraformRC(ctx context.Context, rcPath string, tfProviderDevDirPath string) {
+	abspath, err := filepath.Abs(tfProviderDevDirPath)
+	if err != nil {
+		uclog.Fatalf(ctx, "Failed to get absolute path to terraform-provider-userclouds dev directory %v: %v", tfProviderDevDirPath, err)
+	}
+	config := `
+		provider_installation {
+			dev_overrides {
+				"userclouds/userclouds" = "` + abspath + `"
+			}
+			direct {}
+		}
+	`
+	err = os.WriteFile(rcPath, []byte(config), 0644)
+	if err != nil {
+		uclog.Fatalf(ctx, "Failed to write %v: %v", rcPath, err)
+	}
+}
+
+func genTerraform(ctx context.Context, mfestPath string, mfest *manifest.Manifest, fqtn string, resources *[]liveresource.Resource, tfDir string, tfProviderVersionConstraint string) {
+	if tfProviderVersionConstraint == "" {
+		tfProviderVersionConstraint = ">= 0.0.1"
+	}
 	tfText, err := genconfig.GenConfig(&genconfig.GenerationContext{
-		ManifestFilePath: mfestPath,
-		Manifest:         mfest,
-		FQTN:             fqtn,
-		LiveResources:    resources,
+		ManifestFilePath:            mfestPath,
+		Manifest:                    mfest,
+		FQTN:                        fqtn,
+		LiveResources:               resources,
+		TFProviderVersionConstraint: tfProviderVersionConstraint,
 	})
 	if err != nil {
 		uclog.Fatalf(ctx, "Failed to generate Terraform config: %v", err)
@@ -52,7 +75,7 @@ func genTerraform(ctx context.Context, mfestPath string, mfest *manifest.Manifes
 }
 
 // Apply implements a "ucconfig apply" subcommand that applies a manifest.
-func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client, fqtn string, tenantURL string, clientID string, clientSecret string, manifestPath string) {
+func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client, fqtn string, tenantURL string, clientID string, clientSecret string, manifestPath string, tfProviderVersionConstraint string, tfProviderDevDirPath string) {
 	if dryRun && autoApprove {
 		uclog.Fatalf(ctx, "dry run and auto approve flags are mutually exclusive")
 	}
@@ -95,7 +118,15 @@ func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client,
 		uclog.Fatalf(ctx, "Failed to create temporary directory: %v", err)
 	}
 	uclog.Infof(ctx, "Terraform files will be generated in %s", dname)
-	genTerraform(ctx, manifestPath, &mfest, fqtn, &resources, dname)
+	genTerraform(ctx, manifestPath, &mfest, fqtn, &resources, dname, tfProviderVersionConstraint)
+
+	env := os.Environ()
+	if tfProviderDevDirPath != "" {
+		terraformRCPath := dname + "/.terraformrc"
+		writeTerraformRC(ctx, terraformRCPath, tfProviderDevDirPath)
+		uclog.Infof(ctx, "Setting TF_CLI_CONFIG_FILE=%v to enable usage of local dev build of UC TF provider", terraformRCPath)
+		env = append(env, "TF_CLI_CONFIG_FILE="+terraformRCPath)
+	}
 
 	uclog.Infof(ctx, "Running terraform init...")
 	cmd := exec.Command("terraform", "init")
@@ -103,6 +134,7 @@ func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client,
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Env = env
 	err = cmd.Run()
 	if err != nil {
 		uclog.Fatalf(ctx, "Failed to run terraform init: %v", err)
@@ -125,7 +157,7 @@ func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client,
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Env = os.Environ()
+	cmd.Env = env
 	cmd.Env = append(cmd.Env, "USERCLOUDS_TENANT_URL="+tenantURL)
 	cmd.Env = append(cmd.Env, "USERCLOUDS_CLIENT_ID="+clientID)
 	cmd.Env = append(cmd.Env, "USERCLOUDS_CLIENT_SECRET="+clientSecret)
