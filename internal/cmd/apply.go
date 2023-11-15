@@ -39,7 +39,8 @@ func writeTerraformRC(ctx context.Context, rcPath string, tfProviderDevDirPath s
 
 func genTerraform(ctx context.Context, mfestPath string, mfest *manifest.Manifest, fqtn string, resources *[]liveresource.Resource, tfDir string, tfProviderVersionConstraint string) {
 	if tfProviderVersionConstraint == "" {
-		tfProviderVersionConstraint = ">= 0.0.1"
+		// Require at least v0.1.4 for support for column retention duration settings
+		tfProviderVersionConstraint = ">= 0.1.4"
 	}
 	tfText, err := genconfig.GenConfig(&genconfig.GenerationContext{
 		ManifestFilePath:            mfestPath,
