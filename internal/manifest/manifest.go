@@ -269,13 +269,13 @@ func (r *Resource) RewriteWithFunctionCalls(ctx *functionGenerationContext) erro
 func (mfest *Manifest) Validate(fqtn string) error {
 	for i, resource := range mfest.Resources {
 		if !resourcetypes.ValidateTerraformTypeSuffix(resource.TerraformTypeSuffix) {
-			return ucerr.New(fmt.Sprintf("error validating resource at index %v: uc_terraform_type \"%s\" is not a valid userclouds resource type suffix", i, resource.TerraformTypeSuffix))
+			return ucerr.Errorf("error validating resource at index %v: uc_terraform_type \"%s\" is not a valid userclouds resource type suffix", i, resource.TerraformTypeSuffix)
 		}
 		if resource.ManifestID == "" {
-			return ucerr.New(fmt.Sprintf("error validating resource at index %v: manifest_id is required", i))
+			return ucerr.Errorf("error validating resource at index %v: manifest_id is required", i)
 		}
 		if resource.ResourceUUIDs[fqtn] == "" && resource.ResourceUUIDs["__DEFAULT"] == "" {
-			return ucerr.New(fmt.Sprintf("error validating resource at index %v: resource_uuids either must include a UUID for tenant \"%s\", or it must include a __DEFAULT entry.", i, fqtn))
+			return ucerr.Errorf("error validating resource at index %v: resource_uuids either must include a UUID for tenant \"%s\", or it must include a __DEFAULT entry.", i, fqtn)
 		}
 	}
 	return nil
