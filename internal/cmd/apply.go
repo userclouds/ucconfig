@@ -138,7 +138,7 @@ func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client,
 	cmd.Env = env
 	err = cmd.Run()
 	if err != nil {
-		uclog.Fatalf(ctx, "Failed to run terraform init: %v", err)
+		uclog.Fatalf(ctx, "Failed to run terraform init: %v\nGenerated terraform files are in %s", err, dname)
 	}
 
 	cmdArgs := make([]string, 0, 3)
@@ -164,8 +164,12 @@ func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client,
 	cmd.Env = append(cmd.Env, "USERCLOUDS_CLIENT_SECRET="+clientSecret)
 	err = cmd.Run()
 	if err != nil {
-		uclog.Fatalf(ctx, "Failed to run terraform apply: %v", err)
+		uclog.Fatalf(ctx, "Failed to run terraform apply: %v\nGenerated terraform files are in %s", err, dname)
 	}
 
-	// TODO: write manifest with updated matched resource<->manifest ID mappings
+	// TODO: it could be a nice feature to prompt the user to ask whether to
+	// write the manifest with updated matched resource<->manifest ID mappings.
+	// However, if they have added comments to the manifest or made any
+	// formatting customizations, those would get overwritten, so I have been
+	// waiting to see whether anyone asks for this.
 }
