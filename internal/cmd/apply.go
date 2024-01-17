@@ -10,9 +10,9 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"userclouds.com/cmd/ucconfig/internal/genconfig"
 	"userclouds.com/cmd/ucconfig/internal/liveresource"
 	"userclouds.com/cmd/ucconfig/internal/manifest"
+	"userclouds.com/cmd/ucconfig/internal/tfconfig"
 	"userclouds.com/cmd/ucconfig/internal/tfstate"
 	"userclouds.com/idp"
 	"userclouds.com/infra/uclog"
@@ -42,7 +42,7 @@ func genTerraform(ctx context.Context, mfestPath string, mfest *manifest.Manifes
 		// Require at least v0.1.4 for support for column retention duration settings
 		tfProviderVersionConstraint = ">= 0.1.4"
 	}
-	tfText, err := genconfig.GenConfig(&genconfig.GenerationContext{
+	tfText, err := tfconfig.GenConfig(&tfconfig.GenerationContext{
 		ManifestFilePath:            mfestPath,
 		Manifest:                    mfest,
 		FQTN:                        fqtn,
