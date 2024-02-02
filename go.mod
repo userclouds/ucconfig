@@ -9,7 +9,7 @@ require (
 	github.com/zclconf/go-cty v1.14.0
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
 	gopkg.in/yaml.v3 v3.0.1
-	userclouds.com v0.7.7
+	userclouds.com v1.0.0
 )
 
 require (
@@ -17,6 +17,7 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
