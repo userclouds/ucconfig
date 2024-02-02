@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"userclouds.com/idp"
+	"userclouds.com/idp/policy"
 	"userclouds.com/idp/userstore"
 	"userclouds.com/infra/ucerr"
 )
@@ -114,14 +115,19 @@ var ResourceTypes = []ResourceType{
 			}
 			out := []interface{}{}
 			for _, d := range response.Data {
+				// TODO: this is a temporary workaround to suppress duplicate validator/normalizer fields
+				// Only keep normalizer, remove when server no longer returns validator
+				for i := range d.Columns {
+					d.Columns[i].Validator = userstore.ResourceID{}
+				}
 				out = append(out, d)
 			}
 			return out, nil
 		},
 		References: map[string]string{
-			"access_policy":     "access_policy",
-			"columns.column":    "userstore_column",
-			"columns.validator": "transformer",
+			"access_policy":      "access_policy",
+			"columns.column":     "userstore_column",
+			"columns.normalizer": "transformer",
 		},
 	},
 	{
@@ -147,6 +153,13 @@ var ResourceTypes = []ResourceType{
 			}
 			out := []interface{}{}
 			for _, d := range response.Data {
+				// TODO: (GH #3563) this is a temporary workaround for enums compositeunion/compositeintersection being renamed
+				// Remove when union/intersection are no longer supported
+				if d.PolicyType == policy.PolicyTypeCompositeIntersectionDeprecated {
+					d.PolicyType = policy.PolicyTypeCompositeAnd
+				} else if d.PolicyType == policy.PolicyTypeCompositeUnionDeprecated {
+					d.PolicyType = policy.PolicyTypeCompositeOr
+				}
 				out = append(out, d)
 			}
 			return out, nil

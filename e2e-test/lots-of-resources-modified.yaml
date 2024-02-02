@@ -107,7 +107,7 @@ resources:
         access_policy: '@UC_MANIFEST_ID("access_policy_TestPolicy").id'
         columns:
             - column: '@UC_MANIFEST_ID("userstore_column_name").id'
-              validator: '@UC_SYSTEM_OBJECT("transformer", "PassthroughUnchangedData")'
+              normalizer: '@UC_SYSTEM_OBJECT("transformer", "PassthroughUnchangedData")'
         description: Hello world!
         name: BasicMutator
         selector_config:
@@ -131,7 +131,7 @@ resources:
               template_parameters: '{}'
         description: Simple test policy that allows all access
         name: TestPolicy
-        policy_type: compositeunion
+        policy_type: composite_or
         tag_ids: []
     - uc_terraform_type: access_policy_template
       manifest_id: access_policy_template_BasicTestTemplate
