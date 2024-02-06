@@ -21,7 +21,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
-	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
+	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/redis/go-redis/v9 v9.3.1 // indirect
 	github.com/rogpeppe/go-internal v1.10.1-0.20230524175051-ec119421bb97 // indirect
