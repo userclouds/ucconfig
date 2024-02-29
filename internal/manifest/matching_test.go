@@ -55,7 +55,7 @@ func TestMatchColumnsBasicCase(t *testing.T) {
 
 	err := mfest.MatchLiveResources(context.Background(), &liveResources, "prod")
 	assert.NoErr(t, err)
-	assert.Equal(t, len(tt.GetLogMessagesByLevel(uclog.LogLevelWarning)), 0)
+	tt.AssertMessagesByLogLevel(uclog.LogLevelWarning, 0)
 	assert.Equal(t, liveResources[0].ManifestID, "entry1")
 	assert.Equal(t, liveResources[1].ManifestID, "entry2")
 	// matchColumnsToManifest should have updated the manifest with resource IDs for this specific
@@ -84,7 +84,7 @@ func TestMatchColumnsMissingLiveResources(t *testing.T) {
 
 	err := mfest.MatchLiveResources(context.Background(), &[]liveresource.Resource{}, "prod")
 	assert.NoErr(t, err)
-	assert.Equal(t, len(tt.GetLogMessagesByLevel(uclog.LogLevelWarning)), 0)
+	tt.AssertMessagesByLogLevel(uclog.LogLevelWarning, 0)
 }
 
 func TestMatchColumnsMissingManifestEntries(t *testing.T) {
@@ -99,7 +99,7 @@ func TestMatchColumnsMissingManifestEntries(t *testing.T) {
 
 	err := mfest.MatchLiveResources(context.Background(), &liveResources, "prod")
 	assert.NoErr(t, err)
-	assert.Equal(t, len(tt.GetLogMessagesByLevel(uclog.LogLevelWarning)), 1)
+	tt.AssertMessagesByLogLevel(uclog.LogLevelWarning, 1)
 	assert.Equal(t, liveResources[0].ManifestID, "")
 }
 
@@ -139,7 +139,7 @@ func TestMatchColumnsMatchingByName(t *testing.T) {
 	err := mfest.MatchLiveResources(context.Background(), &liveResources, "prod")
 	assert.NoErr(t, err)
 	// We should get warnings logged that the IDs didn't match
-	assert.Equal(t, len(tt.GetLogMessagesByLevel(uclog.LogLevelWarning)), 2)
+	tt.AssertMessagesByLogLevel(uclog.LogLevelWarning, 2)
 	// But we should still end up with resolved manifest IDs
 	assert.Equal(t, liveResources[0].ManifestID, "entry1")
 	assert.Equal(t, liveResources[1].ManifestID, "entry2")
@@ -184,7 +184,7 @@ func TestMatchColumnsMatchingByIdPrioritized(t *testing.T) {
 
 	err := mfest.MatchLiveResources(context.Background(), &liveResources, "prod")
 	assert.NoErr(t, err)
-	assert.Equal(t, len(tt.GetLogMessagesByLevel(uclog.LogLevelWarning)), 0)
+	tt.AssertMessagesByLogLevel(uclog.LogLevelWarning, 0)
 	assert.Equal(t, liveResources[0].ManifestID, "entry1")
 	assert.Equal(t, liveResources[1].ManifestID, "entry2")
 }
