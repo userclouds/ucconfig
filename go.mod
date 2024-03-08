@@ -26,6 +26,7 @@ require (
 	github.com/redis/go-redis/v9 v9.3.1 // indirect
 	github.com/rogpeppe/go-internal v1.10.1-0.20230524175051-ec119421bb97 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
