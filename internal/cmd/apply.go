@@ -86,17 +86,15 @@ func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client,
 	if err != nil {
 		uclog.Fatalf(ctx, "Failed to read manifest file: %v", err)
 	}
-	// TODO: (GH #3563) this is a temporary workaround for enums compositeunion/compositeintersection being renamed
-	// Remove when union/intersection are no longer supported
-	manifestText = []byte(strings.ReplaceAll(strings.ReplaceAll(string(manifestText), "compositeintersection", "composite_and"), "compositeunion", "composite_or"))
+
 	mfest := manifest.Manifest{}
 	switch filepath.Ext(manifestPath) {
 	case ".json":
-		if err := json.Unmarshal([]byte(manifestText), &mfest); err != nil {
+		if err := json.Unmarshal(manifestText, &mfest); err != nil {
 			uclog.Fatalf(ctx, "Failed to decode JSON: %v", err)
 		}
 	case ".yaml":
-		if err := yaml.Unmarshal([]byte(manifestText), &mfest); err != nil {
+		if err := yaml.Unmarshal(manifestText, &mfest); err != nil {
 			uclog.Fatalf(ctx, "Failed to decode YAML: %v", err)
 		}
 	default:
