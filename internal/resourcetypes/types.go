@@ -88,7 +88,7 @@ var ResourceTypes = []ResourceType{
 	{
 		TerraformTypeSuffix: "userstore_accessor",
 		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
-			response, err := client.ListAccessors(ctx)
+			response, err := client.ListAccessors(ctx, false)
 			if err != nil {
 				return nil, ucerr.Wrap(err)
 			}
@@ -108,7 +108,7 @@ var ResourceTypes = []ResourceType{
 	{
 		TerraformTypeSuffix: "userstore_mutator",
 		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
-			response, err := client.ListMutators(ctx)
+			response, err := client.ListMutators(ctx, false)
 			if err != nil {
 				return nil, ucerr.Wrap(err)
 			}
