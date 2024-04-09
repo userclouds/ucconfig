@@ -69,5 +69,5 @@ gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c h1:Hei/4ADfdWqJk1ZMxUNpqntN
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EVd6muEfDQjcINNoR0C8j2r3qZ4Q=
 gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v2 v2.4.0/go.mod h1:RDklbk79AGWmwhnvt/jBztapEOGDOx6ZbXqjP6csGnQ=
-userclouds.com v1.1.0 h1:x/PiSIvjVNSwPIVZqtEGkEqdJMKLff1/MHwgEF5AW70=
-userclouds.com v1.1.0/go.mod h1:LhonLJTDVJfdbTGocj/D9BEDV1j0TDWMmnNxiNjST2E=
+userclouds.com v1.2.0 h1:HD7RfwyjcHGPAZ8mygYf7lujfDt3RnaAKXN24i45oro=
+userclouds.com v1.2.0/go.mod h1:/RNPnP4mv7TkUigOHgD7kQJd1MZWjT4NLGTgfP2+hWA=
