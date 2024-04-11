@@ -61,6 +61,28 @@ var omitRetentionAttributes = []string{
 // ResourceTypes lists the resource types supported by ucconfig.
 var ResourceTypes = []ResourceType{
 	{
+		TerraformTypeSuffix: "userstore_column_data_type",
+		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
+			response, err := client.ListDataTypes(ctx)
+			if err != nil {
+				return nil, ucerr.Wrap(err)
+			}
+			out := []interface{}{}
+			for _, dataType := range response.Data {
+				out = append(out, dataType)
+			}
+			return out, nil
+		},
+		OmitAttributes: []string{
+			// these are fields that are derived in the backend from the provided name
+			"camel_case_name",
+			"struct_name",
+		},
+		References: map[string]string{
+			"composite_attributes.fields.data_type": "userstore_column_data_type",
+		},
+	},
+	{
 		TerraformTypeSuffix: "userstore_column",
 		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
 			response, err := client.ListColumns(ctx)
@@ -72,6 +94,14 @@ var ResourceTypes = []ResourceType{
 				out = append(out, column)
 			}
 			return out, nil
+		},
+		OmitAttributes: []string{
+			// these are fields that are derived in the backend from the provided name
+			"camel_case_name",
+			"struct_name",
+		},
+		References: map[string]string{
+			"data_type": "userstore_column_data_type",
 		},
 	},
 	{
@@ -192,6 +222,10 @@ var ResourceTypes = []ResourceType{
 				out = append(out, d)
 			}
 			return out, nil
+		},
+		References: map[string]string{
+			"input_data_type":  "userstore_column_data_type",
+			"output_data_type": "userstore_column_data_type",
 		},
 		WriteAttributesExternally: map[string]string{
 			// The JS function should be stored separately to facilitate linting
