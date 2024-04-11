@@ -36,7 +36,7 @@ func (r *Resource) TerraformResourceName() string {
 
 // transformValue takes some value from a UC API model and applies any transformations needed to store
 // that value in the manifest or in TF state.
-func transformValue(data any) (any, error) {
+func transformValue(data any, omitAttributes ...string) (any, error) {
 	v := reflect.ValueOf(data)
 
 	// If this is a userstore.ResourceID, grab just the UUID and omit the name. In the
@@ -61,7 +61,7 @@ func transformValue(data any) (any, error) {
 	if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
 		var items []any
 		for i := 0; i < v.Len(); i++ {
-			transformed, err := transformValue(v.Index(i).Interface())
+			transformed, err := transformValue(v.Index(i).Interface(), omitAttributes...)
 			if err != nil {
 				return nil, ucerr.Errorf("error transforming value at array index %v: %v", i, err)
 			}
@@ -72,7 +72,7 @@ func transformValue(data any) (any, error) {
 	if v.Kind() == reflect.Map {
 		items := map[string]any{}
 		for _, key := range v.MapKeys() {
-			transformed, err := transformValue(v.MapIndex(key).Interface())
+			transformed, err := transformValue(v.MapIndex(key).Interface(), omitAttributes...)
 			if err != nil {
 				return nil, ucerr.Errorf("error transforming value at map key %s: %v", key, err)
 			}
@@ -86,9 +86,14 @@ func transformValue(data any) (any, error) {
 		items := map[string]any{}
 		for i := 0; i < v.NumField(); i++ {
 			key := strings.Split(v.Type().Field(i).Tag.Get("json"), ",")[0]
-			transformed, err := transformValue(v.Field(i).Interface())
+			transformed, err := transformValue(v.Field(i).Interface(), omitAttributes...)
 			if err != nil {
 				return nil, ucerr.Errorf("error transforming struct field %s: %v", v.Type().Field(i).Name, err)
+			}
+
+			// Skip fields that should be omitted
+			if slices.Contains(omitAttributes, key) {
+				continue
 			}
 
 			// Skip optional fields that are empty
@@ -106,7 +111,7 @@ func transformValue(data any) (any, error) {
 		if v.IsNil() {
 			return nil, nil
 		}
-		transformed, err := transformValue(v.Elem().Interface())
+		transformed, err := transformValue(v.Elem().Interface(), omitAttributes...)
 		if err != nil {
 			return nil, ucerr.Wrap(err)
 		}
@@ -162,8 +167,12 @@ func MakeLiveResource(ctx context.Context, resourceType resourcetypes.ResourceTy
 		if !required && v.Field(i).IsZero() {
 			continue
 		}
+		// Native data types should be treated as system resources
+		if jsonKey == "is_native" {
+			isSystem = v.Field(i).Bool()
+		}
 
-		transformed, err := transformValue(v.Field(i).Interface())
+		transformed, err := transformValue(v.Field(i).Interface(), resourceType.OmitAttributes...)
 		if err != nil {
 			return Resource{}, ucerr.Errorf("error marshalling %s field %s: %v", resourceType.TerraformTypeSuffix, jsonKey, err)
 		}

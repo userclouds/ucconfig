@@ -1,10 +1,34 @@
 resources:
+    - uc_terraform_type: userstore_column_data_type
+      manifest_id: userstore_column_data_type_us_address
+      resource_uuids:
+        __DEFAULT: b31f35bf-b015-4b22-8a6c-e98ce3651bd3
+        <<TARGET_FQTN>>: b31f35bf-b015-4b22-8a6c-e98ce3651bd3
+      attributes:
+        composite_attributes:
+            fields:
+                - data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
+                  name: City
+                - data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
+                  ignore_for_uniqueness: true
+                  name: ID
+                  required: true
+                - data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
+                  name: State
+                - data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
+                  name: Street
+                - data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
+                  name: Zip_Code
+            include_id: true
+        description: a us style address
+        name: us_address
     - uc_terraform_type: userstore_column
       manifest_id: userstore_column_email_verified
       resource_uuids:
         __DEFAULT: 12b3f133-4ad1-4f11-9d7d-313eb7cb95fa
         <<TARGET_FQTN>>: 12b3f133-4ad1-4f11-9d7d-313eb7cb95fa
       attributes:
+        data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "boolean")'
         index_type: none
         is_array: false
         name: email_verified
@@ -15,6 +39,7 @@ resources:
         __DEFAULT: 2c7a7c9b-90e8-47e4-8f6e-ec73bd2dec16
         <<TARGET_FQTN>>: 2c7a7c9b-90e8-47e4-8f6e-ec73bd2dec16
       attributes:
+        data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         index_type: indexed
         is_array: false
         name: email
@@ -25,6 +50,7 @@ resources:
         __DEFAULT: 2ee3d57d-9756-464e-a5e9-04244936cb9e
         <<TARGET_FQTN>>: 2ee3d57d-9756-464e-a5e9-04244936cb9e
       attributes:
+        data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         index_type: unique
         is_array: false
         name: external_alias
@@ -35,6 +61,7 @@ resources:
         __DEFAULT: 349d3861-f91c-4489-a7f2-4c06a57cb0de
         <<TARGET_FQTN>>: 349d3861-f91c-4489-a7f2-4c06a57cb0de
       attributes:
+        data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "email")'
         index_type: unique
         is_array: false
         name: testunique
@@ -45,6 +72,7 @@ resources:
         __DEFAULT: 4d4d0757-3bc2-424d-9caf-a930edb49b69
         <<TARGET_FQTN>>: 4d4d0757-3bc2-424d-9caf-a930edb49b69
       attributes:
+        data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         index_type: none
         is_array: false
         name: picture
@@ -55,16 +83,45 @@ resources:
         __DEFAULT: 83cc42b0-da8c-4a61-9db1-da70f21bab60
         <<TARGET_FQTN>>: 83cc42b0-da8c-4a61-9db1-da70f21bab60
       attributes:
+        data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         index_type: none
         is_array: false
         name: nickname
         type: string
+    - uc_terraform_type: userstore_column
+      manifest_id: userstore_column_us_address
+      resource_uuids:
+        __DEFAULT: a9f70bc2-1fb5-4da6-b96e-2317cfc47758
+        <<TARGET_FQTN>>: a9f70bc2-1fb5-4da6-b96e-2317cfc47758
+      attributes:
+        constraints:
+            fields:
+                - name: City
+                  type: string
+                - ignore_for_uniqueness: true
+                  name: ID
+                  required: true
+                  type: string
+                - name: State
+                  type: string
+                - name: Street
+                  type: string
+                - name: Zip_Code
+                  type: string
+            partial_updates: true
+            unique_id_required: true
+        data_type: '@UC_MANIFEST_ID("userstore_column_data_type_us_address").id'
+        index_type: indexed
+        is_array: true
+        name: us_address
+        type: composite
     - uc_terraform_type: userstore_column
       manifest_id: userstore_column_testcol1
       resource_uuids:
         __DEFAULT: ec449fd6-f76e-48fb-b19d-29a2e6b60ac6
         <<TARGET_FQTN>>: ec449fd6-f76e-48fb-b19d-29a2e6b60ac6
       attributes:
+        data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         index_type: none
         is_array: false
         name: testcol1
@@ -75,6 +132,7 @@ resources:
         __DEFAULT: fe20fd48-a006-4ad8-9208-4aad540d8794
         <<TARGET_FQTN>>: fe20fd48-a006-4ad8-9208-4aad540d8794
       attributes:
+        data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         index_type: indexed
         is_array: false
         name: name
@@ -175,8 +233,10 @@ resources:
       attributes:
         description: This policy generates an email token for the given email.
         function: '@FILE("./lots-of-resources_values/transformer_EmailToID_function.js")'
+        input_data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         input_type: string
         name: EmailToID
+        output_data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         output_type: string
         parameters: |-
             [{
@@ -200,8 +260,10 @@ resources:
       attributes:
         description: This policy generates a masked SSN.
         function: '@FILE("./lots-of-resources_values/transformer_SSNToID_function.js")'
+        input_data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         input_type: string
         name: SSNToID
+        output_data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         output_type: string
         parameters: |-
             {
@@ -219,8 +281,10 @@ resources:
       attributes:
         description: hello
         function: '@FILE("./lots-of-resources_values/transformer_TestTransformer_function.js")'
+        input_data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         input_type: string
         name: TestTransformer
+        output_data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         output_type: string
         transform_type: tokenizebyreference
     - uc_terraform_type: transformer
@@ -231,8 +295,10 @@ resources:
       attributes:
         description: This policy generates a masked credit card number.
         function: '@FILE("./lots-of-resources_values/transformer_CreditCardToID_function.js")'
+        input_data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         input_type: string
         name: CreditCardToID
+        output_data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         output_type: string
         parameters: |-
             {
@@ -250,8 +316,10 @@ resources:
       attributes:
         description: This policy generates a masked name.
         function: '@FILE("./lots-of-resources_values/transformer_FullNameToID_function.js")'
+        input_data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         input_type: string
         name: FullNameToID
+        output_data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         output_type: string
         parameters: |-
             [{
@@ -270,8 +338,10 @@ resources:
       attributes:
         description: This policy generates a UUID token for the data.
         function: '@FILE("./lots-of-resources_values/transformer_UUID_function.js")'
+        input_data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         input_type: string
         name: UUID
+        output_data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
         output_type: string
         parameters: '{}'
         transform_type: tokenizebyvalue
