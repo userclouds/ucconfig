@@ -1,8 +1,6 @@
 module userclouds.com/cmd/ucconfig
 
-go 1.21.0
-
-toolchain go1.22.2
+go 1.22.2
 
 require (
 	github.com/alecthomas/kong v0.8.0
