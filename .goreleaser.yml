@@ -1,5 +1,4 @@
-# Adapted from https://goreleaser.com/customization/ko/#example for using ko to
-# release Docker images
+version: 2
 
 before:
   hooks:
@@ -38,10 +37,3 @@ kos:
     platforms:
       - linux/amd64
       - linux/arm64
-
-release:
-  # If you want to manually examine the release before its live, uncomment this line:
-  # draft: true
-
-changelog:
-  skip: true
