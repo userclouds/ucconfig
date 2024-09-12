@@ -123,11 +123,11 @@ func TestCreateStateWithDependencies(t *testing.T) {
         {
           "schema_version": 0,
           "attributes": {
+            "data_type": "00000000-0000-0000-0000-000000000000",
             "id": "fe20fd48-a006-4ad8-9208-4aad540d8794",
             "index_type": "none",
             "is_array": false,
-            "name": "col1",
-            "type": ""
+            "name": "col1"
           },
           "sensitive_attributes": [],
           "dependencies": []
@@ -143,11 +143,11 @@ func TestCreateStateWithDependencies(t *testing.T) {
         {
           "schema_version": 0,
           "attributes": {
+            "data_type": "00000000-0000-0000-0000-000000000000",
             "id": "c860a6d7-c632-4f81-8f5f-597290a9f437",
             "index_type": "none",
             "is_array": false,
-            "name": "col2",
-            "type": ""
+            "name": "col2"
           },
           "sensitive_attributes": [],
           "dependencies": []

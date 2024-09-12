@@ -28,10 +28,13 @@ resources:
         __DEFAULT: 2c7a7c9b-90e8-47e4-8f6e-ec73bd2dec16
         <<TARGET_FQTN>>: 2c7a7c9b-90e8-47e4-8f6e-ec73bd2dec16
       attributes:
+        access_policy: 3f380e42-0b21-4570-a312-91e1b80386fa
         data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
+        default_transformer: c0b5b2a1-0b1f-4b9f-8b1a-1b1f4b9f8b1a
         index_type: none
         is_array: false
         name: email
+        table: users
         type: string
     - uc_terraform_type: userstore_column
       manifest_id: userstore_column_external_alias_renamed
@@ -39,10 +42,13 @@ resources:
         __DEFAULT: 2ee3d57d-9756-464e-a5e9-04244936cb9e
         <<TARGET_FQTN>>: 2ee3d57d-9756-464e-a5e9-04244936cb9e
       attributes:
+        access_policy: 3f380e42-0b21-4570-a312-91e1b80386fa
         data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
+        default_transformer: c0b5b2a1-0b1f-4b9f-8b1a-1b1f4b9f8b1a
         index_type: unique
         is_array: false
         name: external_alias_renamed
+        table: users
         type: string
     - uc_terraform_type: userstore_column
       manifest_id: userstore_column_testunique
@@ -50,10 +56,13 @@ resources:
         __DEFAULT: 349d3861-f91c-4489-a7f2-4c06a57cb0de
         <<TARGET_FQTN>>: 349d3861-f91c-4489-a7f2-4c06a57cb0de
       attributes:
+        access_policy: 3f380e42-0b21-4570-a312-91e1b80386fa
         data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "email")'
+        default_transformer: c0b5b2a1-0b1f-4b9f-8b1a-1b1f4b9f8b1a
         index_type: unique
         is_array: false
         name: testunique
+        table: users
         type: email
     - uc_terraform_type: userstore_column
       manifest_id: userstore_column_picture
@@ -61,10 +70,13 @@ resources:
         __DEFAULT: 4d4d0757-3bc2-424d-9caf-a930edb49b69
         <<TARGET_FQTN>>: 4d4d0757-3bc2-424d-9caf-a930edb49b69
       attributes:
+        access_policy: 3f380e42-0b21-4570-a312-91e1b80386fa
         data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
+        default_transformer: c0b5b2a1-0b1f-4b9f-8b1a-1b1f4b9f8b1a
         index_type: none
         is_array: false
         name: picture
+        table: users
         type: string
     - uc_terraform_type: userstore_column
       manifest_id: userstore_column_nickname
@@ -72,10 +84,13 @@ resources:
         __DEFAULT: 83cc42b0-da8c-4a61-9db1-da70f21bab60
         <<TARGET_FQTN>>: 83cc42b0-da8c-4a61-9db1-da70f21bab60
       attributes:
+        access_policy: 3f380e42-0b21-4570-a312-91e1b80386fa
         data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
+        default_transformer: c0b5b2a1-0b1f-4b9f-8b1a-1b1f4b9f8b1a
         index_type: none
         is_array: false
         name: nickname
+        table: users
         type: string
     - uc_terraform_type: userstore_column
       manifest_id: userstore_column_testcol1
@@ -83,10 +98,13 @@ resources:
         __DEFAULT: ec449fd6-f76e-48fb-b19d-29a2e6b60ac6
         <<TARGET_FQTN>>: ec449fd6-f76e-48fb-b19d-29a2e6b60ac6
       attributes:
+        access_policy: 3f380e42-0b21-4570-a312-91e1b80386fa
         data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
+        default_transformer: c0b5b2a1-0b1f-4b9f-8b1a-1b1f4b9f8b1a
         index_type: none
         is_array: false
         name: testcol1
+        table: users
         type: string
     - uc_terraform_type: userstore_column
       manifest_id: userstore_column_name
@@ -94,10 +112,13 @@ resources:
         __DEFAULT: fe20fd48-a006-4ad8-9208-4aad540d8794
         <<TARGET_FQTN>>: fe20fd48-a006-4ad8-9208-4aad540d8794
       attributes:
+        access_policy: 3f380e42-0b21-4570-a312-91e1b80386fa
         data_type: '@UC_SYSTEM_OBJECT("userstore_column_data_type", "string")'
+        default_transformer: c0b5b2a1-0b1f-4b9f-8b1a-1b1f4b9f8b1a
         index_type: indexed
         is_array: false
         name: name
+        table: users
         type: string
     - uc_terraform_type: userstore_column_soft_deleted_retention_duration
       manifest_id: 6af3794c-0741-4011-ba8f-761f4cacae72
@@ -162,6 +183,7 @@ resources:
         description: Simple test policy that allows all access
         name: TestPolicy
         policy_type: composite_or
+        required_context: {}
         tag_ids: []
     - uc_terraform_type: access_policy_template
       manifest_id: access_policy_template_BasicTestTemplate
