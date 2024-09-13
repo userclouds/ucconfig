@@ -79,17 +79,20 @@ func (c *genManifestCmd) Run(ctx *cliContext) error {
 }
 
 var cli struct {
+	LogFile     string         `name:"logfile" help:"Path to the log file." type:"path"`
 	Apply       applyCmd       `cmd:"" help:"Apply a config manifest file, modifying the live tenant to match what the manifest describes."`
 	GenManifest genManifestCmd `cmd:"" help:"Generate a JSON manifest file from a live tenant."`
 }
 
 func main() {
 	ctx := context.Background()
-	logtransports.InitLoggerAndTransportsForTools(ctx, uclog.LogLevelInfo, uclog.LogLevelVerbose, "ucconfig", logtransports.NoPrefix())
-	defer logtransports.Close()
-
 	cliCtx := kong.Parse(&cli)
-
+	opts := []logtransports.ToolLogOption{logtransports.NoPrefix()}
+	if cli.LogFile != "" {
+		opts = append(opts, logtransports.Filename(cli.LogFile))
+	}
+	logtransports.InitLoggerAndTransportsForTools(ctx, uclog.LogLevelInfo, uclog.LogLevelVerbose, "ucconfig", opts...)
+	defer logtransports.Close()
 	err := cliCtx.Run(&cliContext{Context: ctx})
 	cliCtx.FatalIfErrorf(err)
 }
