@@ -9,7 +9,7 @@ require (
 	github.com/zclconf/go-cty v1.14.0
 	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
 	gopkg.in/yaml.v3 v3.0.1
-	userclouds.com v1.6.0
+	userclouds.com v1.6.1
 )
 
 require (
