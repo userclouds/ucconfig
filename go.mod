@@ -3,7 +3,7 @@ module userclouds.com/cmd/ucconfig
 go 1.23.1
 
 require (
-	github.com/alecthomas/kong v1.6.0
+	github.com/alecthomas/kong v1.6.1
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/hashicorp/hcl/v2 v2.18.0
 	github.com/zclconf/go-cty v1.14.0
