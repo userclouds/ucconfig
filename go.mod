@@ -7,7 +7,7 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/hashicorp/hcl/v2 v2.18.0
 	github.com/zclconf/go-cty v1.14.0
-	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	gopkg.in/yaml.v3 v3.0.1
 	userclouds.com v1.6.1
 )
