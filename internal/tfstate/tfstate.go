@@ -82,7 +82,7 @@ type Instance struct {
 	// SchemaVersion contains the resource-specific schema version within the provider
 	SchemaVersion int `json:"schema_version"`
 	// Attributes contains the attributes of the resource as defined by the provider schema
-	Attributes map[string]interface{} `json:"attributes"`
+	Attributes map[string]any `json:"attributes"`
 	// SensitiveAttributes contains an array of paths within `attributes` to mark as sensitive
 	SensitiveAttributes []string `json:"sensitive_attributes"`
 	// Dependencies contains an array of resource addresses that this resource is dependent on
@@ -164,7 +164,7 @@ func CreateState(resources *[]liveresource.Resource) (State, error) {
 		if resource.IsSystem {
 			continue
 		}
-		attributes := map[string]interface{}{}
+		attributes := map[string]any{}
 		dependencies := []string{}
 		for k, v := range resource.Attributes {
 			attributes[k] = v

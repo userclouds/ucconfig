@@ -41,8 +41,8 @@ type DemoResource struct {
 func TestGetLiveResourcesForType(t *testing.T) {
 	resourceType := resourcetypes.ResourceType{
 		TerraformTypeSuffix: "demo",
-		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
-			return []interface{}{
+		ListResources: func(ctx context.Context, client *idp.Client) ([]any, error) {
+			return []any{
 				DemoResource{
 					ID:         uuid.Must(uuid.FromString("fe20fd48-a006-4ad8-9208-4aad540d8794")),
 					Name:       "demo_resource",

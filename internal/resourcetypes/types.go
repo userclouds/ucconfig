@@ -12,7 +12,7 @@ import (
 type ResourceType struct {
 	TerraformTypeSuffix string
 	// The returned structs must have an ID field.
-	ListResources func(ctx context.Context, client *idp.Client) ([]interface{}, error)
+	ListResources func(ctx context.Context, client *idp.Client) ([]any, error)
 	// References maps attribute paths (e.g. "columns.column") to the terraform type suffix of the
 	// resource UUIDs they reference
 	References map[string]string
@@ -27,12 +27,12 @@ type ResourceType struct {
 	OmitAttributes []string
 }
 
-func getColumnRetentions(ctx context.Context, client *idp.Client, dt userstore.DataLifeCycleState) ([]interface{}, error) {
+func getColumnRetentions(ctx context.Context, client *idp.Client, dt userstore.DataLifeCycleState) ([]any, error) {
 	response, err := client.ListColumns(ctx)
 	if err != nil {
 		return nil, ucerr.Wrap(err)
 	}
-	out := []interface{}{}
+	out := []any{}
 	for _, column := range response.Data {
 		retentionResponse, err := client.GetColumnRetentionDurationsForColumn(ctx, dt, column.ID)
 		if err != nil {
@@ -62,12 +62,12 @@ var omitRetentionAttributes = []string{
 var ResourceTypes = []ResourceType{
 	{
 		TerraformTypeSuffix: "userstore_column_data_type",
-		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
+		ListResources: func(ctx context.Context, client *idp.Client) ([]any, error) {
 			response, err := client.ListDataTypes(ctx)
 			if err != nil {
 				return nil, ucerr.Wrap(err)
 			}
-			out := []interface{}{}
+			out := []any{}
 			for _, dataType := range response.Data {
 				out = append(out, dataType)
 			}
@@ -84,12 +84,12 @@ var ResourceTypes = []ResourceType{
 	},
 	{
 		TerraformTypeSuffix: "userstore_column",
-		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
+		ListResources: func(ctx context.Context, client *idp.Client) ([]any, error) {
 			response, err := client.ListColumns(ctx)
 			if err != nil {
 				return nil, ucerr.Wrap(err)
 			}
-			out := []interface{}{}
+			out := []any{}
 			for _, column := range response.Data {
 				out = append(out, column)
 			}
@@ -106,7 +106,7 @@ var ResourceTypes = []ResourceType{
 	},
 	{
 		TerraformTypeSuffix: "userstore_column_soft_deleted_retention_duration",
-		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
+		ListResources: func(ctx context.Context, client *idp.Client) ([]any, error) {
 			return getColumnRetentions(ctx, client, userstore.DataLifeCycleStateSoftDeleted)
 		},
 		References: map[string]string{
@@ -117,12 +117,12 @@ var ResourceTypes = []ResourceType{
 	},
 	{
 		TerraformTypeSuffix: "userstore_accessor",
-		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
+		ListResources: func(ctx context.Context, client *idp.Client) ([]any, error) {
 			response, err := client.ListAccessors(ctx, false)
 			if err != nil {
 				return nil, ucerr.Wrap(err)
 			}
-			out := []interface{}{}
+			out := []any{}
 			for _, d := range response.Data {
 				out = append(out, d)
 			}
@@ -137,12 +137,12 @@ var ResourceTypes = []ResourceType{
 	},
 	{
 		TerraformTypeSuffix: "userstore_mutator",
-		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
+		ListResources: func(ctx context.Context, client *idp.Client) ([]any, error) {
 			response, err := client.ListMutators(ctx, false)
 			if err != nil {
 				return nil, ucerr.Wrap(err)
 			}
-			out := []interface{}{}
+			out := []any{}
 			for _, d := range response.Data {
 				// TODO: this is a temporary workaround to suppress duplicate validator/normalizer fields
 				// Only keep normalizer, remove when server no longer returns validator
@@ -161,12 +161,12 @@ var ResourceTypes = []ResourceType{
 	},
 	{
 		TerraformTypeSuffix: "userstore_purpose",
-		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
+		ListResources: func(ctx context.Context, client *idp.Client) ([]any, error) {
 			response, err := client.ListPurposes(ctx)
 			if err != nil {
 				return nil, ucerr.Wrap(err)
 			}
-			out := []interface{}{}
+			out := []any{}
 			for _, d := range response.Data {
 				out = append(out, d)
 			}
@@ -175,12 +175,12 @@ var ResourceTypes = []ResourceType{
 	},
 	{
 		TerraformTypeSuffix: "access_policy",
-		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
+		ListResources: func(ctx context.Context, client *idp.Client) ([]any, error) {
 			response, err := client.TokenizerClient.ListAccessPolicies(ctx, false)
 			if err != nil {
 				return nil, ucerr.Wrap(err)
 			}
-			out := []interface{}{}
+			out := []any{}
 			for _, d := range response.Data {
 				out = append(out, d)
 			}
@@ -193,12 +193,12 @@ var ResourceTypes = []ResourceType{
 	},
 	{
 		TerraformTypeSuffix: "access_policy_template",
-		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
+		ListResources: func(ctx context.Context, client *idp.Client) ([]any, error) {
 			response, err := client.TokenizerClient.ListAccessPolicyTemplates(ctx, false)
 			if err != nil {
 				return nil, ucerr.Wrap(err)
 			}
-			out := []interface{}{}
+			out := []any{}
 			for _, d := range response.Data {
 				out = append(out, d)
 			}
@@ -212,12 +212,12 @@ var ResourceTypes = []ResourceType{
 	},
 	{
 		TerraformTypeSuffix: "transformer",
-		ListResources: func(ctx context.Context, client *idp.Client) ([]interface{}, error) {
+		ListResources: func(ctx context.Context, client *idp.Client) ([]any, error) {
 			response, err := client.TokenizerClient.ListTransformers(ctx)
 			if err != nil {
 				return nil, ucerr.Wrap(err)
 			}
-			out := []interface{}{}
+			out := []any{}
 			for _, d := range response.Data {
 				out = append(out, d)
 			}

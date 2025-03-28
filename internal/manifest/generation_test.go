@@ -105,7 +105,7 @@ func TestRewriteManifestAttributeUCSystemObject(t *testing.T) {
 		ManifestID:          "examplecol",
 		ResourceUUID:        "12b3f133-4ad1-4f11-9d7d-313eb7cb95fa",
 		IsSystem:            true,
-		Attributes: map[string]interface{}{
+		Attributes: map[string]any{
 			"name": "example",
 		},
 	}, {
@@ -113,7 +113,7 @@ func TestRewriteManifestAttributeUCSystemObject(t *testing.T) {
 		ManifestID:          "exampletransformer",
 		ResourceUUID:        "c0b5b2a1-0b1f-4b9f-8b1a-1b1f4b9f8b1a",
 		IsSystem:            true,
-		Attributes: map[string]interface{}{
+		Attributes: map[string]any{
 			"name": "tform",
 		},
 	}}
