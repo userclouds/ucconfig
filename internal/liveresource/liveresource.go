@@ -125,9 +125,9 @@ func transformValue(data any, omitAttributes ...string) (any, error) {
 // MakeLiveResource takes a live resource object fetched from the UC API, extracts the ID and
 // attributes, and constructs a LiveResource struct for that resource. ManifestID will be left
 // blank, since we don't perform any matching against a manifest at this stage.
-func MakeLiveResource(ctx context.Context, resourceType resourcetypes.ResourceType, resource interface{}) (Resource, error) {
+func MakeLiveResource(ctx context.Context, resourceType resourcetypes.ResourceType, resource any) (Resource, error) {
 	// Gather the attributes of the resource for the Attributes map
-	attributes := map[string]interface{}{}
+	attributes := map[string]any{}
 	v := reflect.ValueOf(resource)
 	resourceID := v.FieldByName("ID").Interface().(uuid.UUID)
 	isSystem := false
@@ -189,7 +189,7 @@ func MakeLiveResource(ctx context.Context, resourceType resourcetypes.ResourceTy
 	}, nil
 }
 
-func validateResourceType(resourceType resourcetypes.ResourceType, liveResources *[]interface{}) error {
+func validateResourceType(resourceType resourcetypes.ResourceType, liveResources *[]any) error {
 	// Validate that the resource model type has an ID field. Currently ucconfig doesn't support
 	// resources without an ID (or with an ID that goes by a different name in the struct).
 	v := reflect.ValueOf((*liveResources)[0])

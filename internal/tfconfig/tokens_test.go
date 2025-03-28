@@ -90,7 +90,7 @@ func TestToHclTokensUCSystemObject(t *testing.T) {
 			TerraformTypeSuffix: "userstore_column",
 			ResourceUUID:        "78733010-2a5b-469e-924e-50258db84db9",
 			IsSystem:            true,
-			Attributes: map[string]interface{}{
+			Attributes: map[string]any{
 				"name": "syscol",
 			},
 		}},

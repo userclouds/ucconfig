@@ -14,7 +14,7 @@ func makeLiveResource(id string, name string) liveresource.Resource {
 	return liveresource.Resource{
 		TerraformTypeSuffix: "userstore_column",
 		ResourceUUID:        id,
-		Attributes: map[string]interface{}{
+		Attributes: map[string]any{
 			"name": name,
 		},
 	}
@@ -36,7 +36,7 @@ func TestMatchColumnsBasicCase(t *testing.T) {
 				ResourceUUIDs: map[string]string{
 					"__DEFAULT": "fe20fd48-a006-4ad8-9208-4aad540d8794",
 				},
-				Attributes: map[string]interface{}{
+				Attributes: map[string]any{
 					"name": "col1",
 				},
 			},
@@ -46,7 +46,7 @@ func TestMatchColumnsBasicCase(t *testing.T) {
 				ResourceUUIDs: map[string]string{
 					"__DEFAULT": "c860a6d7-c632-4f81-8f5f-597290a9f437",
 				},
-				Attributes: map[string]interface{}{
+				Attributes: map[string]any{
 					"name": "col2",
 				},
 			},
@@ -75,7 +75,7 @@ func TestMatchColumnsMissingLiveResources(t *testing.T) {
 				ResourceUUIDs: map[string]string{
 					"__DEFAULT": "fe20fd48-a006-4ad8-9208-4aad540d8794",
 				},
-				Attributes: map[string]interface{}{
+				Attributes: map[string]any{
 					"name": "col1",
 				},
 			},
@@ -119,7 +119,7 @@ func TestMatchColumnsMatchingByName(t *testing.T) {
 				ResourceUUIDs: map[string]string{
 					"__DEFAULT": "fe20fd48-a006-4ad8-9208-4aad540d8794",
 				},
-				Attributes: map[string]interface{}{
+				Attributes: map[string]any{
 					"name": "col1",
 				},
 			},
@@ -129,7 +129,7 @@ func TestMatchColumnsMatchingByName(t *testing.T) {
 				ResourceUUIDs: map[string]string{
 					"__DEFAULT": "c860a6d7-c632-4f81-8f5f-597290a9f437",
 				},
-				Attributes: map[string]interface{}{
+				Attributes: map[string]any{
 					"name": "col2",
 				},
 			},
@@ -165,7 +165,7 @@ func TestMatchColumnsMatchingByIdPrioritized(t *testing.T) {
 				ResourceUUIDs: map[string]string{
 					"__DEFAULT": "fe20fd48-a006-4ad8-9208-4aad540d8794",
 				},
-				Attributes: map[string]interface{}{
+				Attributes: map[string]any{
 					"name": "col2",
 				},
 			},
@@ -175,7 +175,7 @@ func TestMatchColumnsMatchingByIdPrioritized(t *testing.T) {
 				ResourceUUIDs: map[string]string{
 					"__DEFAULT": "c860a6d7-c632-4f81-8f5f-597290a9f437",
 				},
-				Attributes: map[string]interface{}{
+				Attributes: map[string]any{
 					"name": "col1",
 				},
 			},
