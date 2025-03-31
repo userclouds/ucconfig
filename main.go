@@ -27,11 +27,11 @@ type tenantConfig struct {
 }
 
 func (cfg tenantConfig) initTenantContext(ctx context.Context) tenantContext {
-	url, err := url.Parse(cfg.TenantURL)
+	tenantURL, err := url.Parse(cfg.TenantURL)
 	if err != nil {
 		uclog.Fatalf(ctx, "Failed to parse tenant URL: %v", err)
 	}
-	fqtn := strings.Split(url.Hostname(), ".")[0]
+	fqtn := strings.Split(tenantURL.Hostname(), ".")[0]
 
 	// Initialize IDP client based on env vars
 	tokenSource := jsonclient.ClientCredentialsTokenSource(cfg.TenantURL+"/oidc/token", cfg.ClientID, cfg.ClientSecret, nil)
