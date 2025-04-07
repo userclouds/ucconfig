@@ -34,23 +34,23 @@ import (
 // State is the top-level struct for a terraform.tfstate file
 type State struct {
 	// Version contains the state file schema version
-	Version int `json:"version"`
+	Version int `json:"version" yaml:"version"`
 	// TerraformVersion contains the version of Terraform that was used to create this state file
-	TerraformVersion string `json:"terraform_version"`
+	TerraformVersion string `json:"terraform_version" yaml:"terraform_version"`
 	// Serial is a monotonically increasing number that is incremented each time the state file is
 	// modified
-	Serial int `json:"serial"`
+	Serial int `json:"serial" yaml:"serial"`
 	// Lineage is a UUID that is generated when the state file is created for the first time. Good
 	// explanation of `serial` and `lineage` here:
 	// https://discuss.hashicorp.com/t/terraform-state-schema/48660/2
-	Lineage string `json:"lineage"`
+	Lineage string `json:"lineage" yaml:"lineage"`
 	// Outputs contains the outputs from the terraform configuration
-	Outputs map[string]Output `json:"outputs"`
+	Outputs map[string]Output `json:"outputs" yaml:"outputs"`
 	// Resources contains information about the resources being managed by Terraform
-	Resources []Resource `json:"resources"`
+	Resources []Resource `json:"resources" yaml:"resources"`
 	// CheckResults contains the results of any condition checks such as preconditions,
 	// postconditions, and variable validation
-	CheckResults []CheckResult `json:"check_results"`
+	CheckResults []CheckResult `json:"check_results" yaml:"check_results"`
 }
 
 // Output contains information about Terraform output values
@@ -62,31 +62,31 @@ type Output struct {
 type Resource struct {
 	// Module contains the address to the module being used to provision this resource (blank for
 	// the root module)
-	Module string `json:"module,omitempty"`
+	Module string `json:"module,omitempty" yaml:"module,omitempty"`
 	// Mode contains the mode of the resource (managed or data)
-	Mode string `json:"mode"`
+	Mode string `json:"mode" yaml:"mode"`
 	// Type contains the type of the resource (e.g. "userclouds_userstore_column")
-	Type string `json:"type"`
+	Type string `json:"type" yaml:"type"`
 	// Name contains the name of the resource (e.g. "address")
-	Name string `json:"name"`
+	Name string `json:"name" yaml:"name"`
 	// Provider contains the full path for the provider that manages this resource
-	Provider string `json:"provider"`
+	Provider string `json:"provider" yaml:"provider"`
 	// Instances contains one or more instances of this resource
-	Instances []Instance `json:"instances"`
+	Instances []Instance `json:"instances" yaml:"instances"`
 }
 
 // Instance contains information about a specific instantiation of a Terraform resource
 type Instance struct {
 	// Status contains the status of the resource (e.g. "tainted")
-	Status string `json:"status,omitempty"`
+	Status string `json:"status,omitempty" yaml:"status,omitempty"`
 	// SchemaVersion contains the resource-specific schema version within the provider
-	SchemaVersion int `json:"schema_version"`
+	SchemaVersion int `json:"schema_version" yaml:"schema_version"`
 	// Attributes contains the attributes of the resource as defined by the provider schema
-	Attributes map[string]any `json:"attributes"`
+	Attributes map[string]any `json:"attributes" yaml:"attributes"`
 	// SensitiveAttributes contains an array of paths within `attributes` to mark as sensitive
-	SensitiveAttributes []string `json:"sensitive_attributes"`
+	SensitiveAttributes []string `json:"sensitive_attributes" yaml:"sensitive_attributes"`
 	// Dependencies contains an array of resource addresses that this resource is dependent on
-	Dependencies []string `json:"dependencies"`
+	Dependencies []string `json:"dependencies" yaml:"dependencies"`
 }
 
 // CheckResult contains information about the results of a Terraform configuration check
