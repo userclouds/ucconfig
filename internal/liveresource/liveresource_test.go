@@ -31,11 +31,11 @@ func TestTransformValue(t *testing.T) {
 }
 
 type DemoResource struct {
-	ID         uuid.UUID `json:"id"`
-	Name       string    `json:"name"`
-	IsSystem   bool      `json:"is_system"`
-	StringAttr string    `json:"string_attr"`
-	IntAttr    int       `json:"int_attr"`
+	ID         uuid.UUID `json:"id" yaml:"id"`
+	Name       string    `json:"name" yaml:"name"`
+	IsSystem   bool      `json:"is_system" yaml:"is_system"`
+	StringAttr string    `json:"string_attr" yaml:"string_attr"`
+	IntAttr    int       `json:"int_attr" yaml:"int_attr"`
 }
 
 func TestGetLiveResourcesForType(t *testing.T) {
