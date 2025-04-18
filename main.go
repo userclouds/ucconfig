@@ -12,6 +12,7 @@ import (
 	"userclouds.com/idp"
 	"userclouds.com/infra/jsonclient"
 	"userclouds.com/infra/logtransports"
+	"userclouds.com/infra/ucerr"
 	"userclouds.com/infra/uclog"
 )
 
@@ -62,8 +63,7 @@ type applyCmd struct {
 // Run implements the apply subcommand
 func (c *applyCmd) Run(ctx *cliContext) error {
 	tenantCtx := c.initTenantContext(ctx.Context)
-	cmd.Apply(ctx.Context, c.DryRun, c.AutoApprove, tenantCtx.IDPClient, tenantCtx.FQTN, c.TenantURL, c.ClientID, c.ClientSecret, c.ManifestPath, c.TFProviderVersionConstraint, c.TFProviderDevDirPath)
-	return nil
+	return ucerr.Wrap(cmd.Apply(ctx.Context, c.DryRun, c.AutoApprove, tenantCtx.IDPClient, tenantCtx.FQTN, c.TenantURL, c.ClientID, c.ClientSecret, c.ManifestPath, c.TFProviderVersionConstraint, c.TFProviderDevDirPath))
 }
 
 type genManifestCmd struct {
@@ -74,8 +74,7 @@ type genManifestCmd struct {
 // Run implements the gen-manifest subcommand
 func (c *genManifestCmd) Run(ctx *cliContext) error {
 	tenantCtx := c.initTenantContext(ctx.Context)
-	cmd.GenerateNewManifest(ctx.Context, tenantCtx.IDPClient, tenantCtx.FQTN, c.ManifestPath)
-	return nil
+	return ucerr.Wrap(cmd.GenerateNewManifest(ctx.Context, tenantCtx.IDPClient, tenantCtx.FQTN, c.ManifestPath))
 }
 
 var cli struct {
