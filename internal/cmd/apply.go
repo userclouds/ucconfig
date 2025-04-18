@@ -15,13 +15,14 @@ import (
 	"userclouds.com/cmd/ucconfig/internal/tfconfig"
 	"userclouds.com/cmd/ucconfig/internal/tfstate"
 	"userclouds.com/idp"
+	"userclouds.com/infra/ucerr"
 	"userclouds.com/infra/uclog"
 )
 
-func writeTerraformRC(ctx context.Context, rcPath string, tfProviderDevDirPath string) {
+func writeTerraformRC(ctx context.Context, rcPath string, tfProviderDevDirPath string) error {
 	abspath, err := filepath.Abs(tfProviderDevDirPath)
 	if err != nil {
-		uclog.Fatalf(ctx, "Failed to get absolute path to terraform-provider-userclouds dev directory %v: %v", tfProviderDevDirPath, err)
+		return ucerr.Friendlyf(err, "Failed to get absolute path to terraform-provider-userclouds dev directory %v", tfProviderDevDirPath)
 	}
 	config := `
 		provider_installation {
@@ -31,13 +32,10 @@ func writeTerraformRC(ctx context.Context, rcPath string, tfProviderDevDirPath s
 			direct {}
 		}
 	`
-	err = os.WriteFile(rcPath, []byte(config), 0644)
-	if err != nil {
-		uclog.Fatalf(ctx, "Failed to write %v: %v", rcPath, err)
-	}
+	return ucerr.Wrap(os.WriteFile(rcPath, []byte(config), 0644))
 }
 
-func genTerraform(ctx context.Context, mfestPath string, mfest *manifest.Manifest, fqtn string, resources *[]liveresource.Resource, tfDir string, tfProviderVersionConstraint string) {
+func genTerraform(ctx context.Context, mfestPath string, mfest *manifest.Manifest, fqtn string, resources *[]liveresource.Resource, tfDir string, tfProviderVersionConstraint string) error {
 	if tfProviderVersionConstraint == "" {
 		// Require at least v0.1.8 for support for column search indexing
 		tfProviderVersionConstraint = ">= 0.1.8"
@@ -50,82 +48,83 @@ func genTerraform(ctx context.Context, mfestPath string, mfest *manifest.Manifes
 		TFProviderVersionConstraint: tfProviderVersionConstraint,
 	})
 	if err != nil {
-		uclog.Fatalf(ctx, "Failed to generate Terraform config: %v", err)
+		return ucerr.Friendlyf(err, "Failed to generate Terraform config")
 	}
 
-	err = os.WriteFile(tfDir+"/main.tf", []byte(tfText), 0644)
+	err = os.WriteFile(filepath.Join(tfDir, "main.tf"), []byte(tfText), 0644)
 	if err != nil {
-		uclog.Fatalf(ctx, "Failed to write generated Terraform config: %v", err)
+		return ucerr.Friendlyf(err, "Failed to write generated Terraform config")
 	}
 
-	// We also need to generate Terraform state for the existing resources, so that Terraform
-	// doesn't try to create resources that already exist, and so that it will delete resources that
-	// exist but are no longer in the manifest.
+	// Generate Terraform state for existing resources
 	state, err := tfstate.CreateState(resources)
 	if err != nil {
-		uclog.Fatalf(ctx, "Failed to generate Terraform state: %v", err)
+		return ucerr.Friendlyf(err, "Failed to generate Terraform state")
 	}
 	stateBytes, err := json.MarshalIndent(state, "", "  ")
 	if err != nil {
-		uclog.Fatalf(ctx, "Failed to marshal Terraform state: %v", err)
+		return ucerr.Friendlyf(err, "Failed to marshal Terraform state")
 	}
-	err = os.WriteFile(tfDir+"/terraform.tfstate", stateBytes, 0644)
-	if err != nil {
-		uclog.Fatalf(ctx, "Failed to write Terraform state: %v", err)
-	}
+	return ucerr.Wrap(os.WriteFile(filepath.Join(tfDir, "terraform.tfstate"), stateBytes, 0644))
 }
 
 // Apply implements a "ucconfig apply" subcommand that applies a manifest.
-func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client, fqtn string, tenantURL string, clientID string, clientSecret string, manifestPath string, tfProviderVersionConstraint string, tfProviderDevDirPath string) {
+func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client, fqtn string, tenantURL string, clientID string, clientSecret string, manifestPath string, tfProviderVersionConstraint string, tfProviderDevDirPath string) error {
 	if dryRun && autoApprove {
-		uclog.Fatalf(ctx, "dry run and auto approve flags are mutually exclusive")
+		return ucerr.Friendlyf(nil, "dry run and auto approve flags are mutually exclusive")
 	}
 
 	uclog.Infof(ctx, "Reading manifest from %s...", manifestPath)
 	manifestText, err := os.ReadFile(manifestPath)
 	if err != nil {
-		uclog.Fatalf(ctx, "Failed to read manifest file: %v", err)
+		return ucerr.Friendlyf(err, "Failed to read manifest file")
 	}
 
 	mfest := manifest.Manifest{}
 	switch filepath.Ext(manifestPath) {
 	case ".json":
 		if err := json.Unmarshal(manifestText, &mfest); err != nil {
-			uclog.Fatalf(ctx, "Failed to decode JSON: %v", err)
+			return ucerr.Friendlyf(err, "Failed to decode JSON")
 		}
 	case ".yaml":
 		if err := yaml.Unmarshal(manifestText, &mfest); err != nil {
-			uclog.Fatalf(ctx, "Failed to decode YAML: %v", err)
+			return ucerr.Friendlyf(err, "Failed to decode YAML")
 		}
 	default:
-		uclog.Fatalf(ctx, "Manifest path must have .json or .yaml extension")
+		return ucerr.Friendlyf(nil, "Manifest path must have .json or .yaml extension")
 	}
 	if err := mfest.Validate(fqtn); err != nil {
-		uclog.Fatalf(ctx, "Failed to validate manifest: %v", err)
+		return ucerr.Friendlyf(err, "Failed to validate manifest")
 	}
 
 	uclog.Infof(ctx, "Fetching live resources...")
 	resources, err := liveresource.GetLiveResources(ctx, idpClient)
 	if err != nil {
-		uclog.Fatalf(ctx, "Failed to fetch live resources: %v", err)
+		return ucerr.Friendlyf(err, "Failed to fetch live resources")
 	}
 	err = mfest.MatchLiveResources(ctx, &resources, fqtn)
 	if err != nil {
-		uclog.Fatalf(ctx, "Failed to match manifest entries to live resources: %v", err)
+		return ucerr.Friendlyf(err, "Failed to match manifest entries to live resources")
 	}
 
 	uclog.Infof(ctx, "Generating Terraform...")
 	dname, err := os.MkdirTemp("", "ucconfig-terraform")
 	if err != nil {
-		uclog.Fatalf(ctx, "Failed to create temporary directory: %v", err)
+		return ucerr.Friendlyf(err, "Failed to create temporary directory")
 	}
 	uclog.Infof(ctx, "Terraform files will be generated in %s", dname)
-	genTerraform(ctx, manifestPath, &mfest, fqtn, &resources, dname, tfProviderVersionConstraint)
+
+	err = genTerraform(ctx, manifestPath, &mfest, fqtn, &resources, dname, tfProviderVersionConstraint)
+	if err != nil {
+		return ucerr.Friendlyf(err, "Error during Terraform generation")
+	}
 
 	env := os.Environ()
 	if tfProviderDevDirPath != "" {
 		terraformRCPath := dname + "/.terraformrc"
-		writeTerraformRC(ctx, terraformRCPath, tfProviderDevDirPath)
+		if err := writeTerraformRC(ctx, terraformRCPath, tfProviderDevDirPath); err != nil {
+			return ucerr.Friendlyf(err, "Failed to write Terraform RC file")
+		}
 		uclog.Infof(ctx, "Setting TF_CLI_CONFIG_FILE=%v to enable usage of local dev build of UC TF provider", terraformRCPath)
 		env = append(env, "TF_CLI_CONFIG_FILE="+terraformRCPath)
 	}
@@ -137,16 +136,13 @@ func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client,
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Env = env
-	err = cmd.Run()
-	if err != nil {
-		uclog.Fatalf(ctx, "Failed to run terraform init: %v\nGenerated terraform files are in %s", err, dname)
+	if err := cmd.Run(); err != nil {
+		return ucerr.Friendlyf(err, "Failed to run terraform init. Generated terraform files are in %s", dname)
 	}
 
 	cmdArgs := make([]string, 0, 3)
-
 	if dryRun {
 		cmdArgs = append(cmdArgs, "plan")
-
 	} else {
 		cmdArgs = append(cmdArgs, "apply")
 		if autoApprove {
@@ -163,9 +159,8 @@ func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client,
 	cmd.Env = append(cmd.Env, "USERCLOUDS_TENANT_URL="+tenantURL)
 	cmd.Env = append(cmd.Env, "USERCLOUDS_CLIENT_ID="+clientID)
 	cmd.Env = append(cmd.Env, "USERCLOUDS_CLIENT_SECRET="+clientSecret)
-	err = cmd.Run()
-	if err != nil {
-		uclog.Fatalf(ctx, "Failed to run terraform apply: %v\nGenerated terraform files are in %s", err, dname)
+	if err := cmd.Run(); err != nil {
+		return ucerr.Friendlyf(err, "Failed to run terraform apply. Generated terraform files are in %s", dname)
 	}
 
 	// TODO: it could be a nice feature to prompt the user to ask whether to
@@ -173,4 +168,6 @@ func Apply(ctx context.Context, dryRun, autoApprove bool, idpClient *idp.Client,
 	// However, if they have added comments to the manifest or made any
 	// formatting customizations, those would get overwritten, so I have been
 	// waiting to see whether anyone asks for this.
+
+	return nil
 }

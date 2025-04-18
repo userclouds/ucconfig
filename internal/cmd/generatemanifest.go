@@ -15,23 +15,22 @@ import (
 )
 
 // GenerateNewManifest implements a "ucconfig gen-manifest" subcommand that generates a new manifest.
-func GenerateNewManifest(ctx context.Context, idpClient *idp.Client, fqtn string, manifestPath string) {
+func GenerateNewManifest(ctx context.Context, idpClient *idp.Client, fqtn string, manifestPath string) error {
 	uclog.Infof(ctx, "Generating new manifest from live resource state...")
 
 	manifestBasename := filepath.Base(manifestPath)
 	externValuesDirName := manifestBasename[:len(manifestBasename)-len(filepath.Ext(manifestBasename))] + "_values"
 	externValuesDirPath, err := filepath.Abs(filepath.Dir(manifestPath) + "/" + externValuesDirName)
 	if err != nil {
-		uclog.Fatalf(ctx, "Failed to get absolute path for storing attribute values externally: %v", ucerr.Wrap(err))
+		return ucerr.Friendlyf(err, "failed to get absolute path for storing attribute values externally")
 	}
-	// Clear out the target directory if it already exists. If the user has
-	// deleted some resources (e.g. deleted a transformer), we don't want to
-	// keep the associated value files around
-	if os.RemoveAll(externValuesDirPath) != nil {
-		uclog.Fatalf(ctx, "Failed to clear directory %s for storing attribute values externally: %v", externValuesDirPath, ucerr.Wrap(err))
+
+	// Clear out the target directory if it already exists
+	if err := os.RemoveAll(externValuesDirPath); err != nil {
+		return ucerr.Friendlyf(err, "failed to clear directory %s for storing attribute values externally", externValuesDirPath)
 	}
-	if os.MkdirAll(externValuesDirPath, 0755) != nil {
-		uclog.Fatalf(ctx, "Failed to create directory %s for storing attribute values externally: %v", externValuesDirPath, ucerr.Wrap(err))
+	if err := os.MkdirAll(externValuesDirPath, 0755); err != nil {
+		return ucerr.Friendlyf(err, "failed to create directory %s for storing attribute values externally", externValuesDirPath)
 	}
 
 	mfest, err := manifest.GenerateNewManifest(ctx, idpClient, fqtn, &manifest.ExternValuesDirConfig{
@@ -39,7 +38,7 @@ func GenerateNewManifest(ctx context.Context, idpClient *idp.Client, fqtn string
 		RelativePathFromManifest: "./" + externValuesDirName,
 	})
 	if err != nil {
-		uclog.Fatalf(ctx, "Failed to generate manifest: %v", ucerr.Wrap(err))
+		return ucerr.Friendlyf(err, "failed to generate manifest")
 	}
 
 	var serialized []byte
@@ -49,16 +48,16 @@ func GenerateNewManifest(ctx context.Context, idpClient *idp.Client, fqtn string
 	case ".yaml":
 		serialized, err = yaml.Marshal(mfest)
 	default:
-		uclog.Fatalf(ctx, "Manifest path must have .json or .yaml extension")
-		return
+		return ucerr.Friendlyf(nil, "manifest path must have .json or .yaml extension")
 	}
 	if err != nil {
-		uclog.Fatalf(ctx, "Failed to serialize manifest: %v", ucerr.Wrap(err))
+		return ucerr.Friendlyf(err, "failed to serialize manifest")
 	}
 
-	err = os.WriteFile(manifestPath, serialized, 0644)
-	if err != nil {
-		uclog.Fatalf(ctx, "Failed to write manifest: %v", ucerr.Wrap(err))
+	if err := os.WriteFile(manifestPath, serialized, 0644); err != nil {
+		return ucerr.Friendlyf(err, "failed to write manifest")
 	}
+
 	uclog.Infof(ctx, "Wrote %d resources into manifest: %s", len(mfest.Resources), manifestPath)
+	return nil
 }
